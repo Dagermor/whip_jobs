@@ -8,7 +8,7 @@ Everything a job does in the world on a [WHIP](https://whipfx.net) FiveM server:
 
 It works with **[es_mdt](https://github.com/Dagermor/es_mdt)** (departments, ranks, dispatch, tickets, impound, the DOJ) and **es_jail** (cuffs). es_mdt keeps the paperwork and computer side; whip_jobs does what happens in the world.
 
-> **Status: public test release (0.5.0).**
+> **Status: public test release (0.6.0).**
 
 ## Features
 
@@ -80,6 +80,7 @@ whip_jobs 0.5.0 is es_jobs with a new name. Your stations, uniforms, pay, busine
 
 - Client: `OpenStations({ jobId, stationId, new, starter })`, `OpenBusiness()`, `GetStarter(type)`, `IsOpen()`.
 - Server: `GetStations(jobId)`, `GetSpots(type)`, `HasSpotType(type)`, `GetBusinesses()`, `GetFleetVehicle(...)`, `RecordIncome(...)`, `GetHurtState(...)`, `HandlesDowns()`.
+- Server, for es_mdt's EMS side (0.6.0): `GetMedical(charId, limit)`, `LastTreatment(charId, days)`, `GetMedicalBills(opts)`, `WaiveMedicalBill(billId, by, note)`, `GetMedicalStats(days, jobIds)`. es_mdt 2.5.0 shows treatments, bills and EMS stats with them.
 
 ## Tests
 

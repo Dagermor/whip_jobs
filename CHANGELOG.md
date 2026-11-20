@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0 (2026-11-20)
+
+- **For es_mdt 2.5.0's EMS side** (server exports, read by the MDT): `GetMedical(charId, limit)` (records, open bills, owed), `LastTreatment(charId, days)`, `GetMedicalBills({ status, jobIds, charId, limit })`, `WaiveMedicalBill(billId, by, note)` (logged) and `GetMedicalStats(days, jobIds)` (per medic, per kind).
+- es_mdt decides who may see or waive; whip_jobs only reads and writes its own tables. No other changes.
+
 ## 0.5.0 (2026-11-20)
 
 - **Renamed es_jobs → whip_jobs** (resource, repository, exports, callbacks, events, page, commands' ace, docs). A community resource, not an official WHIPFX one.

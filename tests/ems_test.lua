@@ -189,6 +189,31 @@ H.health[3] = 200
 r, why = H.call(1, 'whip_jobs:ems:treat', { target = 3 })
 ok(r == false and why:find('not hurt'), 'not hurt: nothing to treat')
 
+-- ---------------------------------------------------------------- 0.6.0: exports for es_mdt's EMS side
+do
+  local g = H.exports.GetMedical(103, 40)
+  ok(type(g) == 'table' and #g.records >= 1 and g.records[1].kindLabel ~= nil and type(g.owed) == 'number', 'GetMedical: shaped records + unpaid bills + owed')
+  ok(H.exports.GetMedical('x') == nil, 'GetMedical: bad id -> nil')
+  local lt = H.exports.LastTreatment(103, 7)
+  ok(lt and lt.kind ~= 'note' and lt.charId == 103, 'LastTreatment: newest non-note record')
+  ok(H.exports.LastTreatment(999, 7) == nil, 'LastTreatment: nobody -> nil')
+  local all = H.exports.GetMedicalBills({ status = 'all', limit = 100 })
+  local un = H.exports.GetMedicalBills({ status = 'unpaid', jobIds = { ems.jobId }, limit = 100 })
+  local other = H.exports.GetMedicalBills({ status = 'unpaid', jobIds = { lspd.jobId } })
+  local okU = true for _, b in ipairs(un) do if b.status ~= 'unpaid' then okU = false end end
+  ok(#all >= #un and okU and #other == 0, 'GetMedicalBills: status and job filters')
+  ok(#un == 0 or un[1].dept == 'LSFD', 'GetMedicalBills: the department name')
+  local bid = MySQL.insert.await('INSERT INTO `es_jobs_med_bills` (`charId`,`jobId`,`amount`,`reason`,`status`,`recordId`) VALUES (?,?,?,?,?,?)', { 104, ems.jobId, 300, 'Test', 'unpaid', nil })
+  local w, info = H.exports.WaiveMedicalBill(bid, { charId = 102, name = 'Chief Cole', source = 2 }, 'charity')
+  ok(w == true and info.amount == 300 and H.T.bills[bid].status == 'waived', 'WaiveMedicalBill: waived')
+  local w2, why2 = H.exports.WaiveMedicalBill(bid, {}, '')
+  ok(w2 == false and why2:find('not open'), 'WaiveMedicalBill: twice -> not open')
+  local st = H.exports.GetMedicalStats(30, { ems.jobId })
+  local any = false for _, v in pairs(st) do for _, n in pairs(v) do if n > 0 then any = true end end end
+  ok(type(st) == 'table' and any and (st[101] or st[102]) ~= nil, 'GetMedicalStats: per medic, per kind')
+  ok(next(H.exports.GetMedicalStats(30, { lspd.jobId })) == nil, 'GetMedicalStats: job filter')
+end
+
 -- ---------------------------------------------------------------- off: plain WHIP
 Config.EMS.enabled = false
 ok(H.exports.HandlesDowns() == false, 'EMS off: es_mdt alerts downs again')

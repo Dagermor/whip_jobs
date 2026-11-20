@@ -366,12 +366,33 @@ local function q(sql, p)
   if has("SET `status` = 'paying'") then local b = T.bills[p[1]] if b and b.status == 'unpaid' then b.status = 'paying' return 1 end return 0 end
   if has('UPDATE `es_jobs_med_bills` SET `status` = ?, `paidAt`') then T.bills[p[3]].status = p[1] return 1 end
   if has("SET `status` = 'waived'") then T.bills[p[1]].status = 'waived' return 1 end
-  if has('FROM `es_jobs_medical` m') then local by = {} local o = {}
+  if has('FROM `es_jobs_medical` m') and not has('es_jobs_med_bills') then local by = {} local o = {}
     for _, r in ipairs(T.med) do if not p[1] or r.name:lower():find(p[1]:gsub('%%', ''):lower(), 1, true) or r.charId == p[2] then
       if not by[r.charId] then by[r.charId] = { charId = r.charId, name = r.name, n = 0, last = 1 } o[#o + 1] = by[r.charId] end by[r.charId].n = by[r.charId].n + 1 end end return o end
   if has('FROM `es_jobs_medical` ORDER BY `id` DESC LIMIT 12') then local o = {} for i = #T.med, math.max(1, #T.med - 11), -1 do o[#o + 1] = T.med[i] end return o end
   if has('FROM `es_jobs_medical` WHERE `charId` = ? ORDER BY `id` DESC LIMIT 60') then local o = {} for i = #T.med, 1, -1 do if T.med[i].charId == p[1] then o[#o + 1] = T.med[i] end end return o end
   if has('SELECT `name` FROM `es_jobs_medical` WHERE `charId` = ?') then for i = #T.med, 1, -1 do if T.med[i].charId == p[1] then return { T.med[i] } end end return {} end
+  -- 0.6.0: es_mdt's EMS side
+  if has('FROM `es_jobs_medical` WHERE `charId` = ? ORDER BY `id` DESC LIMIT ?') then local o = {} for i = #T.med, 1, -1 do if T.med[i].charId == p[1] and #o < p[2] then o[#o + 1] = T.med[i] end end return o end
+  if has("FROM `es_jobs_medical` WHERE `charId` = ? AND `kind` <> 'note'") then for i = #T.med, 1, -1 do local r = T.med[i] if r.charId == p[1] and r.kind ~= 'note' then return { r } end end return {} end
+  if has('FROM `es_jobs_med_bills` b') then
+    local i, st, cid = 1, nil, nil
+    if has('b.`status` = ?') then st = p[i] i = i + 1 end
+    local jobs = s:match('b%.`jobId` IN %(([%d,]+)%)')
+    if has('b.`charId` = ?') then cid = p[i] i = i + 1 end
+    local lim, o = p[i], {}
+    for k = #T.bills, 1, -1 do local b = T.bills[k]
+      local inJ = not jobs or (',' .. jobs .. ','):find(',' .. b.jobId .. ',', 1, true)
+      if (not st or b.status == st) and (not cid or b.charId == cid) and inJ and #o < lim then
+        local name for j = #T.med, 1, -1 do if T.med[j].charId == b.charId then name = T.med[j].name break end end
+        o[#o + 1] = { id = b.id, charId = b.charId, jobId = b.jobId, amount = b.amount, reason = b.reason, status = b.status, recordId = b.recordId, at = 1, name = name } end end
+    return o end
+  if has('SELECT `byCharId`, `kind`, COUNT(*)') then
+    local jobs = s:match('`jobId` IN %(([%d,]+)%)')
+    local agg, o = {}, {}
+    for _, r in ipairs(T.med) do if r.byCharId and (not jobs or (',' .. jobs .. ','):find(',' .. tostring(r.jobId) .. ',', 1, true)) then
+      local k = r.byCharId .. '|' .. r.kind agg[k] = agg[k] or { byCharId = r.byCharId, kind = r.kind, n = 0 } agg[k].n = agg[k].n + 1 end end
+    for _, v in pairs(agg) do o[#o + 1] = v end return o end
   error('unhandled SQL: ' .. s)
 end
 local function single(sql, p) local r = q(sql, p) if type(r) == 'table' and r[1] then return r[1] end return r end

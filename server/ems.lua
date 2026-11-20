@@ -657,3 +657,86 @@ end
 exports('HandlesDowns', function() return on() end)
 --- 'wounded' | 'down' | nil
 exports('GetHurtState', function(src) local h = Hurt[tonumber(src) or 0] return h and h.state or nil end)
+
+-- ---------------------------------------------------------------- 0.6.0: for es_mdt's EMS side (read on the server only)
+-- es_mdt checks who may see or do what (its EMS ranks); these only read and write our tables.
+
+--- { records = { shaped, newest first }, bills = { unpaid }, owed = $ } for one person
+exports('GetMedical', function(charId, limit)
+    local cid = tonumber(charId)
+    if not cid then return nil end
+    limit = math.max(1, math.min(100, math.floor(tonumber(limit) or 40)))
+    local rows = MySQL.query.await([[SELECT `id`,`charId`,`name`,`kind`,`injury`,`treatment`,`notes`,`jobId`,`bill`,`byName`,`place`,UNIX_TIMESTAMP(`at`) AS `at`
+        FROM `es_jobs_medical` WHERE `charId` = ? ORDER BY `id` DESC LIMIT ?]], { cid, limit }) or {}
+    local out = {}
+    for _, r in ipairs(rows) do out[#out + 1] = shape(r) end
+    local bills = unpaidOf(cid)
+    local owed = 0
+    for _, b in ipairs(bills) do owed = owed + b.amount end
+    return { records = out, bills = bills, owed = owed }
+end)
+
+--- the newest record of a person, of these kinds (default: aid, treat, revive, respawn, desk), not older than `days`
+exports('LastTreatment', function(charId, days)
+    local cid = tonumber(charId)
+    if not cid then return nil end
+    local r = MySQL.single.await([[SELECT `id`,`charId`,`name`,`kind`,`injury`,`treatment`,`notes`,`jobId`,`bill`,`byName`,`place`,UNIX_TIMESTAMP(`at`) AS `at`
+        FROM `es_jobs_medical` WHERE `charId` = ? AND `kind` <> 'note' AND `at` > NOW() - INTERVAL ? DAY ORDER BY `id` DESC LIMIT 1]],
+        { cid, math.max(1, math.min(365, math.floor(tonumber(days) or 7))) })
+    return type(r) == 'table' and r.id and shape(r) or nil
+end)
+
+--- bills: opts { status = 'unpaid'|'paid'|'waived'|'all', jobIds = { ... }, limit } -> list (newest first) with the patient's name
+exports('GetMedicalBills', function(opts)
+    opts = type(opts) == 'table' and opts or {}
+    local where, args = {}, {}
+    local st = opts.status or 'unpaid'
+    if st ~= 'all' then
+        if st ~= 'unpaid' and st ~= 'paid' and st ~= 'waived' then st = 'unpaid' end
+        where[#where + 1] = 'b.`status` = ?' args[#args + 1] = st
+    end
+    local jobs = {}
+    for _, j in ipairs(type(opts.jobIds) == 'table' and opts.jobIds or {}) do if tonumber(j) then jobs[#jobs + 1] = math.floor(tonumber(j)) end end
+    if #jobs > 0 then where[#where + 1] = ('b.`jobId` IN (%s)'):format(table.concat(jobs, ',')) end
+    if tonumber(opts.charId) then where[#where + 1] = 'b.`charId` = ?' args[#args + 1] = math.floor(tonumber(opts.charId)) end
+    args[#args + 1] = math.max(1, math.min(300, math.floor(tonumber(opts.limit) or 100)))
+    local rows = MySQL.query.await(([[SELECT b.`id`,b.`charId`,b.`jobId`,b.`amount`,b.`reason`,b.`status`,b.`recordId`,UNIX_TIMESTAMP(b.`createdAt`) AS `at`,
+        UNIX_TIMESTAMP(b.`paidAt`) AS `paidAt`, (SELECT m.`name` FROM `es_jobs_medical` m WHERE m.`charId` = b.`charId` ORDER BY m.`id` DESC LIMIT 1) AS `name`
+        FROM `es_jobs_med_bills` b %s ORDER BY b.`id` DESC LIMIT ?]]):format(#where > 0 and ('WHERE ' .. table.concat(where, ' AND ')) or ''), args) or {}
+    for _, r in ipairs(rows) do
+        local o = ESJ.orgByJob(r.jobId)
+        r.dept = o and (o.short or o.name) or nil
+        r.name = r.name or ESJ.nameOf(r.charId)
+    end
+    return rows
+end)
+
+--- waive an unpaid bill (es_mdt checked the rank). by = { charId, name, source? } -> true | false, why
+exports('WaiveMedicalBill', function(billId, by, note)
+    by = type(by) == 'table' and by or {}
+    local b = MySQL.single.await('SELECT * FROM `es_jobs_med_bills` WHERE `id` = ?', { tonumber(billId) or 0 })
+    if not b or b.status ~= 'unpaid' then return false, 'That bill is not open' end
+    local n = MySQL.update.await("UPDATE `es_jobs_med_bills` SET `status` = 'waived', `paidAt` = NOW() WHERE `id` = ? AND `status` = 'unpaid'", { b.id })
+    if (tonumber(n) or 0) < 1 then return false, 'That bill is not open' end
+    local text = ('waived medical bill #%d ($%d) of #%d in the MDT%s'):format(b.id, b.amount, b.charId,
+        type(note) == 'string' and note ~= '' and (': ' .. note:sub(1, 120)) or '')
+    if tonumber(by.source) then pcall(function() WC:LogActivity(tonumber(by.source), 'whip_jobs_ems', { detail = text }) end) end
+    return true, { id = b.id, amount = b.amount, charId = b.charId }
+end)
+
+--- per member: { [charId] = { aid, treat, revive, desk, respawn, note } } of records they made in the last `days`
+--- (jobIds: only records for those jobs; none = every job)
+exports('GetMedicalStats', function(days, jobIds)
+    days = math.max(1, math.min(365, math.floor(tonumber(days) or 30)))
+    local jobs = {}
+    for _, j in ipairs(type(jobIds) == 'table' and jobIds or {}) do if tonumber(j) then jobs[#jobs + 1] = math.floor(tonumber(j)) end end
+    local rows = MySQL.query.await(([[SELECT `byCharId`, `kind`, COUNT(*) AS `n` FROM `es_jobs_medical` WHERE `byCharId` IS NOT NULL
+        AND `at` > NOW() - INTERVAL ? DAY%s GROUP BY `byCharId`, `kind`]]):format(#jobs > 0 and (' AND `jobId` IN (' .. table.concat(jobs, ',') .. ')') or ''), { days }) or {}
+    local out = {}
+    for _, r in ipairs(rows) do
+        local k = tonumber(r.byCharId)
+        out[k] = out[k] or {}
+        out[k][r.kind] = (out[k][r.kind] or 0) + (tonumber(r.n) or 0)
+    end
+    return out
+end)

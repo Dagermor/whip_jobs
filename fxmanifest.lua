@@ -8,7 +8,7 @@ lua54 'yes'
 name 'whip_jobs'
 description 'Job pack for WHIP: stations, peds, duty, armory, fleet, uniforms, police tools, impound clerk, EMS (wounded/down, hospital, medical records), pay by rank, businesses'
 author 'Rob'
-version '0.5.0'
+version '0.6.0'
 whip_requires '1.0'
 
 dependencies { 'oxmysql', 'whip_core' }   -- optional: es_mdt (departments), es_jail (cuffs), whip_phone
