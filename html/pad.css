@@ -1,0 +1,46 @@
+/* es_mdt 2.0.13: controller focus ring, button hints and the hold ring (html/pad.js) */
+#esp-ring { position: fixed; left: 0; top: 0; z-index: 2147483000; pointer-events: none; opacity: 0;
+  border: 3px solid #5aa2ff; box-shadow: 0 0 0 2px rgba(10, 14, 22, .85), 0 0 18px 3px rgba(90, 162, 255, .55), inset 0 0 12px rgba(90, 162, 255, .25);
+  transition: transform .09s ease-out, width .09s ease-out, height .09s ease-out, opacity .12s; }
+#esp-ring.on { opacity: 1; animation: esp-pulse 1.6s ease-in-out infinite; }
+@keyframes esp-pulse { 50% { box-shadow: 0 0 0 2px rgba(10, 14, 22, .85), 0 0 26px 6px rgba(90, 162, 255, .7), inset 0 0 12px rgba(90, 162, 255, .3); } }
+html.esp-pad, html.esp-pad * { cursor: none !important; }
+html.esp-pad .esp-focus { background-image: linear-gradient(rgba(90, 162, 255, .14), rgba(90, 162, 255, .14)) !important; }
+
+#esp-hints { position: fixed; left: 50%; bottom: 14px; transform: translate(-50%, 8px); z-index: 2147482000; pointer-events: none;
+  display: flex; gap: 14px; align-items: center; padding: 7px 14px; border-radius: 999px; opacity: 0; transition: opacity .15s, transform .15s;
+  background: rgba(12, 16, 25, .9); border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 8px 26px rgba(0, 0, 0, .45);
+  color: #e8ecf3; font: 600 12.5px/1 'Barlow', 'Segoe UI', sans-serif; white-space: nowrap; }
+#esp-hints.on { opacity: 1; transform: translate(-50%, 0); }
+#esp-hints .esp-h { display: inline-flex; align-items: center; gap: 4px; }
+#esp-hints em { font-style: normal; margin-left: 3px; color: rgba(232, 236, 243, .85); }
+.espg { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 3px; box-sizing: border-box;
+  border-radius: 50%; font: 800 11px/1 'Barlow', 'Segoe UI', sans-serif; color: #0b0f17; background: #d6dbe4; }
+.espg.xa { background: #3fbf5a; } .espg.xb { background: #e5484d; } .espg.xx { background: #3b82f6; color: #fff; } .espg.xy { background: #f5c518; }
+.espg.pa { background: #1f2533; color: #8fb6ff; border: 1.5px solid #8fb6ff; font-size: 12px; }
+.espg.pb { background: #1f2533; color: #ff7a85; border: 1.5px solid #ff7a85; font-size: 13px; }
+.espg.px { background: #1f2533; color: #f39bd8; border: 1.5px solid #f39bd8; }
+.espg.py { background: #1f2533; color: #5fd3a6; border: 1.5px solid #5fd3a6; }
+.espg.sh { border-radius: 6px; padding: 0 5px; font-size: 10.5px; background: #3a4255; color: #fff; }
+.espg.st { border-radius: 50%; background: #3a4255; color: #fff; font-size: 9.5px; width: 22px; height: 22px; }
+.espg.dp { border-radius: 5px; background: #3a4255; color: #fff; font-size: 11px; }
+.espg + .espg { margin-left: 2px; }
+.espg-plus { font-style: normal; opacity: .6; margin: 0 2px; font-size: 11px; }
+kbd.espk { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box;
+  border-radius: 5px; background: #2b3242; border: 1px solid rgba(255, 255, 255, .18); border-bottom-width: 2px; color: #fff; font: 700 11px/1 'Barlow', 'Segoe UI', sans-serif; }
+
+#esp-hold { position: fixed; left: 50%; bottom: 22%; transform: translateX(-50%) scale(.9); z-index: 2147483001; pointer-events: none; opacity: 0;
+  display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 999px; background: rgba(12, 16, 25, .92);
+  border: 1px solid rgba(255, 255, 255, .14); color: #fff; font: 700 15px/1 'Barlow', 'Segoe UI', sans-serif; letter-spacing: .02em;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5); transition: opacity .12s, transform .12s; }
+#esp-hold.on { opacity: 1; transform: translateX(-50%) scale(1); }
+#esp-hold svg { width: 38px; height: 38px; transform: rotate(-90deg); }
+#esp-hold circle { fill: none; stroke-width: 4.5; }
+#esp-hold circle.bg { stroke: rgba(255, 255, 255, .15); }
+#esp-hold circle.fg { stroke: #5aa2ff; stroke-linecap: round; stroke-dasharray: 119.4; stroke-dashoffset: 119.4; animation: esp-fill linear forwards; }
+#esp-hold.panic { border-color: rgba(239, 68, 68, .7); box-shadow: 0 0 30px rgba(239, 68, 68, .45), 0 10px 30px rgba(0, 0, 0, .5); }
+#esp-hold.panic circle.fg { stroke: #ef4444; }
+#esp-hold.done circle.fg { animation: none; stroke-dashoffset: 0; }
+#esp-hold.done { background: rgba(22, 101, 52, .95); }
+#esp-hold.panic.done { background: rgba(153, 27, 27, .95); }
+@keyframes esp-fill { to { stroke-dashoffset: 0; } }

@@ -1,0 +1,14 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+# never commit server secrets or logs
+server.cfg
+*.cfg
+.env
+*.log
+*.sql
+*.zip
+*.tgz

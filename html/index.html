@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>es_jobs</title>
+<link rel="stylesheet" href="https://cfx-nui-whip_core/html/css/fonts.css">
+<link rel="stylesheet" href="https://cfx-nui-whip_core/html/css/base.css">
+<script src="https://cfx-nui-whip_core/html/js/caps.js"></script>
+<script src="https://cfx-nui-whip_core/html/js/page-tools.js"></script>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="pad.css">
+</head>
+<body>
+<div id="app" class="hidden">
+  <!-- a station spot: duty desk, armory, garage -->
+  <div id="v-spot" class="shell spot-shell hidden"></div>
+  <!-- a locker room: uniforms with a live preview on the player (the game shows the ped behind this panel) -->
+  <div id="v-locker" class="shell lk-shell hidden"></div>
+  <!-- the station editor (admin menu, Departments -> Locations, /business) -->
+  <div id="v-stations" class="shell hidden">
+    <aside class="side">
+      <div class="side-head">
+        <div><div class="title">Stations</div><div class="hint">Shared by departments and businesses</div></div>
+        <button class="btn icon" data-close title="Close">✕</button>
+      </div>
+      <div class="chips" id="st-filter"></div>
+      <div class="dept-list" id="st-list"></div>
+      <div class="side-foot">
+        <button class="btn accent" id="st-new">＋ New station</button>
+        <div class="row" id="st-admin">
+          <button class="btn ghost sm" id="st-export">Backup</button>
+          <button class="btn ghost sm" id="st-import">Restore backup</button>
+          <button class="btn ghost sm" id="st-deleted">Deleted</button>
+        </div>
+      </div>
+    </aside>
+    <main class="main" id="st-main"><div class="empty">Pick a station, or make a new one.</div></main>
+  </div>
+  <!-- businesses and departments you lead (/business) -->
+  <div id="v-business" class="shell hidden">
+    <aside class="side">
+      <div class="side-head">
+        <div><div class="title">Businesses</div><div class="hint">And the departments you lead</div></div>
+        <button class="btn icon" data-close title="Close">✕</button>
+      </div>
+      <div class="dept-list" id="bz-list"></div>
+      <div class="side-foot"><button class="btn accent hidden" id="bz-new">＋ New business</button></div>
+    </aside>
+    <main class="main" id="bz-main"><div class="empty">Pick a business.</div></main>
+  </div>
+</div>
+<div id="modal" class="modal hidden"><div class="modal-card"></div></div>
+<div id="toast" class="toast"></div>
+<div id="padhints" class="pad-hints"></div>
+<script src="pad.js"></script>
+<script src="app.js"></script>
+<script src="gear.js"></script>
+<script src="locker.js"></script>
+<script src="ems.js"></script>
+<script src="editor.js"></script>
+<script src="business.js"></script>
+</body>
+</html>

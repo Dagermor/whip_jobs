@@ -1,0 +1,91 @@
+-- es_jobs: the screen. One NUI page (html/) with three views: a station spot (duty, armory, garage, locker), the station
+-- editor (admin menu / Departments -> Locations) and Businesses (/business). The page asks the server through `call` (a SecureCallback each).
+ESJ = ESJ or {}
+ESJ.ui = { open = false, view = nil }
+
+local ALLOWED = {
+    ['es_jobs:biz:list'] = true, ['es_jobs:org:get'] = true, ['es_jobs:biz:create'] = true, ['es_jobs:biz:update'] = true,
+    ['es_jobs:biz:logoPart'] = true, ['es_jobs:biz:logo'] = true, ['es_jobs:biz:rank'] = true, ['es_jobs:biz:rankDelete'] = true,
+    ['es_jobs:biz:nearby'] = true, ['es_jobs:biz:hire'] = true, ['es_jobs:biz:setRank'] = true, ['es_jobs:biz:fire'] = true,
+    ['es_jobs:biz:delete'] = true, ['es_jobs:pay:set'] = true,
+    ['es_jobs:st:list'] = true, ['es_jobs:st:save'] = true, ['es_jobs:st:delete'] = true, ['es_jobs:st:history'] = true,
+    ['es_jobs:st:restore'] = true, ['es_jobs:st:undo'] = true, ['es_jobs:st:export'] = true, ['es_jobs:st:import'] = true,
+    ['es_jobs:st:teleport'] = true,
+    ['es_jobs:spot:open'] = true, ['es_jobs:duty'] = true, ['es_jobs:armory:take'] = true, ['es_jobs:armory:return'] = true,
+    ['es_jobs:fleet:take'] = true, ['es_jobs:fleet:return'] = true, ['es_jobs:locker:open'] = true,
+    ['es_jobs:uni:list'] = true, ['es_jobs:uni:wear'] = true, ['es_jobs:uni:own'] = true, ['es_jobs:uni:save'] = true,
+    ['es_jobs:uni:delete'] = true, ['es_jobs:uni:order'] = true, ['es_jobs:imp:pay'] = true, ['es_jobs:imp:take'] = true,
+    ['es_jobs:hosp:treat'] = true, ['es_jobs:hosp:pay'] = true, ['es_jobs:med:list'] = true, ['es_jobs:med:patient'] = true,
+    ['es_jobs:med:note'] = true, ['es_jobs:med:waive'] = true,
+}
+
+--- ask the server; returns ok, data|why
+function ESJ.call(name, d)
+    local ok, a, b = pcall(function() return Whip.core:Callback(name, d or {}) end)
+    if not ok then return false, 'The server did not answer' end
+    if a == false or a == nil then return false, b or 'Refused' end
+    return true, a
+end
+
+function ESJ.openUI(view, data)
+    ESJ.ui.open, ESJ.ui.view = true, view
+    SendNUIMessage({ action = 'open', view = view, data = data or {}, me = { serverId = GetPlayerServerId(PlayerId()) } })
+    pcall(function() exports.whip_core:SetScreenOpen(true) end)
+    ESJPAD.open()
+end
+
+function ESJ.closeUI()
+    if not ESJ.ui.open then return end
+    ESJ.ui.open, ESJ.ui.view = false, nil
+    SendNUIMessage({ action = 'close' })
+    ESJPAD.close()
+    pcall(function() exports.whip_core:SetScreenOpen(false) end)
+    if ESJ.onClosed then ESJ.onClosed() end
+end
+
+RegisterNUICallback('esj_close', function(_, cb) ESJ.closeUI() cb({}) end)
+
+-- the page's calls: only the names above, one table each
+RegisterNUICallback('esj_call', function(d, cb)
+    d = type(d) == 'table' and d or {}
+    local name = d.name
+    if type(name) ~= 'string' or not ALLOWED[name] then return cb({ ok = false, why = 'Unknown call' }) end
+    CreateThread(function()
+        local ok, r = ESJ.call(name, type(d.data) == 'table' and d.data or {})
+        cb({ ok = ok, data = ok and r or nil, why = (not ok) and tostring(r) or nil })
+    end)
+end)
+
+-- a department's logo comes from es_mdt (its own cache, client side); a business's from us
+RegisterNUICallback('esj_deptLogo', function(d, cb)
+    d = type(d) == 'table' and d or {}
+    if GetResourceState('es_mdt') ~= 'started' then return cb({ ok = false }) end
+    CreateThread(function()
+        local ok, url = pcall(function() return exports.es_mdt:GetLogo(tonumber(d.id), tonumber(d.ver)) end)
+        cb({ ok = ok and type(url) == 'string', url = ok and type(url) == 'string' and url or nil })
+    end)
+end)
+
+RegisterNetEvent('es_jobs:client:open', function(o)
+    o = type(o) == 'table' and o or {}
+    if o.view == 'stations' then
+        if ESJ.openEditor then ESJ.openEditor() end
+    elseif o.view == 'business' then
+        ESJ.openUI('business', {})
+    end
+end)
+
+RegisterNetEvent('es_jobs:client:bizChanged', function(id)
+    if ESJ.ui.open then SendNUIMessage({ action = 'bizChanged', id = id }) end
+end)
+
+-- other resources (es_mdt's Departments wizard: "Set up locations") open our screens
+exports('OpenStations', function(opts)
+    if ESJ.openEditor then ESJ.openEditor(type(opts) == 'table' and opts or {}) end
+end)
+exports('OpenBusiness', function() ESJ.openUI('business', {}) end)
+exports('IsOpen', function() return ESJ.ui.open end)
+
+AddEventHandler('onResourceStop', function(r)
+    if r == GetCurrentResourceName() and ESJ.ui.open then SetNuiFocus(false, false) end
+end)
