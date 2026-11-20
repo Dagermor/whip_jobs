@@ -1,4 +1,4 @@
-// es_jobs 0.3.0: EMS on the page. The hurt chip (wounded: yellow, down: red), drawn without focus, and the hospital desk
+// whip_jobs 0.3.0: EMS on the page. The hurt chip (wounded: yellow, down: red), drawn without focus, and the hospital desk
 // (treatment, bills, and medical records for EMS on duty) inside the station spot view (gear.js hands it over).
 (function () {
   'use strict';
@@ -98,15 +98,15 @@
   }
 
   async function loadList() {
-    const r = await call('es_jobs:med:list', Object.assign({ q }, where()));
+    const r = await call('whip_jobs:med:list', Object.assign({ q }, where()));
     if (said(r)) { list = r.data; render(); }
   }
   async function openPatient(cid) {
-    const r = await call('es_jobs:med:patient', Object.assign({ charId: cid }, where()));
+    const r = await call('whip_jobs:med:patient', Object.assign({ charId: cid }, where()));
     if (said(r)) { P = r.data; render(); }
   }
   async function reload() {
-    const r = await call('es_jobs:spot:open', where());
+    const r = await call('whip_jobs:spot:open', where());
     if (r.ok) { D = r.data; render(); } else said(r);
   }
 
@@ -114,15 +114,15 @@
     const b = el.querySelector('.sp-body');
     b.querySelectorAll('[data-tab]').forEach((x) => x.onclick = () => { tab = x.dataset.tab; P = null; render(); if (tab === 'records' && !list) loadList(); });
     b.querySelectorAll('[data-treat]').forEach((x) => x.onclick = () => busy(x, async () => {
-      const r = await call('es_jobs:hosp:treat', Object.assign({ method: x.dataset.treat }, where()));
+      const r = await call('whip_jobs:hosp:treat', Object.assign({ method: x.dataset.treat }, where()));
       if (said(r, 'You are treated: full health')) reload();
     }));
     b.querySelectorAll('[data-ring]').forEach((x) => x.onclick = () => busy(x, async () => {
-      const r = await call('es_jobs:hosp:treat', where());
+      const r = await call('whip_jobs:hosp:treat', where());
       said(r, r.data && r.data.again ? 'A medic was already called: wait here' : 'A medic is on the way: wait here');
     }));
     b.querySelectorAll('[data-pay]').forEach((x) => x.onclick = () => busy(x, async () => {
-      const r = await call('es_jobs:hosp:pay', Object.assign({ id: +x.dataset.pay, method: x.dataset.m }, where()));
+      const r = await call('whip_jobs:hosp:pay', Object.assign({ id: +x.dataset.pay, method: x.dataset.m }, where()));
       if (said(r, 'Bill paid')) { D.hosp.bills = r.data.bills; render(); }
     }));
     const qi = b.querySelector('#hp-q');
@@ -131,12 +131,12 @@
     b.querySelectorAll('[data-pt]').forEach((x) => x.onclick = () => busy(x, () => openPatient(+x.dataset.pt)));
     b.querySelectorAll('[data-back]').forEach((x) => x.onclick = () => { P = null; render(); });
     b.querySelectorAll('[data-note]').forEach((x) => x.onclick = () => busy(x, async () => {
-      const r = await call('es_jobs:med:note', Object.assign({ charId: P.charId, text: b.querySelector('#hp-note').value }, where()));
+      const r = await call('whip_jobs:med:note', Object.assign({ charId: P.charId, text: b.querySelector('#hp-note').value }, where()));
       if (said(r, 'Note added')) { P = r.data; render(); }
     }));
     b.querySelectorAll('[data-waive]').forEach((x) => x.onclick = async () => {
       if (!await J.confirm('Waive this bill?', 'The patient will not have to pay it.', 'Waive')) return;
-      const r = await call('es_jobs:med:waive', Object.assign({ id: +x.dataset.waive }, where()));
+      const r = await call('whip_jobs:med:waive', Object.assign({ id: +x.dataset.waive }, where()));
       if (said(r, 'Bill waived')) { P = r.data; render(); }
     });
   }

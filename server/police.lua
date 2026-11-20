@@ -1,4 +1,4 @@
--- es_jobs: police with es_jail's cuffs. Put a cuffed person in a car and take them out (their own game seats them: WHIP
+-- whip_jobs: police with es_jail's cuffs. Put a cuffed person in a car and take them out (their own game seats them: WHIP
 -- escorts, es_jail cuffs, this moves them), the breathalyzer, the drug test and spike strips. Every action is checked
 -- here: an officer on duty at a police department, standing by the person or the car, the person cuffed.
 ESJ = ESJ or {}
@@ -67,7 +67,7 @@ local function seat(source, d)
     local s = ESJ.int(d.seat, -1, 6, 1)
     if s == -1 then return false, 'Not the driver\'s seat' end
     if GetPedInVehicleSeat(veh, s) ~= 0 then return false, 'That seat is taken' end
-    TriggerClientEvent('es_jobs:client:seat', t, NetworkGetNetworkIdFromEntity(veh), s)
+    TriggerClientEvent('whip_jobs:client:seat', t, NetworkGetNetworkIdFromEntity(veh), s)
     WC:NotifyPlayer(t, 'You are put in the car', 'info')
     return true
 end
@@ -79,7 +79,7 @@ local function out(source, d)
     if not cuffed(t) then return false, 'Only someone cuffed' end
     local veh = GetVehiclePedIsIn(them, false)
     if veh == 0 then return false, 'They are not in a vehicle' end
-    TriggerClientEvent('es_jobs:client:out', t)
+    TriggerClientEvent('whip_jobs:client:out', t)
     return true
 end
 
@@ -96,7 +96,7 @@ end
 local function breath(source, d)
     local B = P().breathalyzer or {}
     if not officer(source) then return false, 'Only police on duty' end
-    if not WC:HasItem(source, B.item or 'es_jobs_breathalyzer') then return false, 'You need a breathalyzer' end
+    if not WC:HasItem(source, B.item or 'whip_jobs_breathalyzer') then return false, 'You need a breathalyzer' end
     local t, them = targetOf(source, d)
     if not t then return false, them end
     if WC:IsPlayerDead(t) then return false, 'They cannot blow into it now' end
@@ -109,14 +109,14 @@ local function breath(source, d)
     local text = ('%s blew %.3f%s'):format(name(t), bac, over and ' (over the limit)' or '')
     WC:NotifyPlayer(source, text, over and 'error' or 'success', 9000)
     WC:NotifyPlayer(t, ('You blew %.3f'):format(bac), 'info', 7000)
-    WC:LogActivity(source, 'es_jobs_breath', { detail = text })
+    WC:LogActivity(source, 'whip_jobs_breath', { detail = text })
     return { bac = bac, over = over, name = name(t) }
 end
 
 local function drug(source, d)
     local T = P().drugTest or {}
     if not officer(source) then return false, 'Only police on duty' end
-    local item = T.item or 'es_jobs_drug_test'
+    local item = T.item or 'whip_jobs_drug_test'
     if not WC:HasItem(source, item) then return false, 'You need a drug test kit' end
     local t, them = targetOf(source, d)
     if not t then return false, them end
@@ -139,7 +139,7 @@ local function drug(source, d)
     local text = #found > 0 and ('%s: POSITIVE for %s'):format(name(t), table.concat(found, ', ')) or ('%s: negative'):format(name(t))
     WC:NotifyPlayer(source, text, #found > 0 and 'error' or 'success', 9000)
     WC:NotifyPlayer(t, #found > 0 and 'The swab came back positive' or 'The swab came back negative', 'info', 7000)
-    WC:LogActivity(source, 'es_jobs_drugtest', { detail = text })
+    WC:LogActivity(source, 'whip_jobs_drugtest', { detail = text })
     return { found = found, name = name(t) }
 end
 
@@ -147,7 +147,7 @@ end
 local function pushStrips(to)
     local list = {}
     for _, s in pairs(strips) do list[#list + 1] = { id = s.id, netId = s.netId, x = s.x, y = s.y, z = s.z, h = s.h } end
-    TriggerClientEvent('es_jobs:client:spikes', to or -1, list)
+    TriggerClientEvent('whip_jobs:client:spikes', to or -1, list)
 end
 
 local function removeStrip(s)
@@ -158,7 +158,7 @@ end
 local function spike(source, d)
     local S = P().spikes or {}
     if not officer(source) then return false, 'Only police on duty' end
-    local item = S.item or 'es_jobs_spike_strip'
+    local item = S.item or 'whip_jobs_spike_strip'
     if not WC:HasItem(source, item) then return false, 'You have no spike strip' end
     local p = ESJ.point(d)
     if not p then return false, 'Not there' end
@@ -193,7 +193,7 @@ local function unspike(source, d)
     if not me or #(GetEntityCoords(me) - vector3(s.x, s.y, s.z)) > 5.0 then return false, 'Get closer' end
     removeStrip(s)
     pushStrips()
-    local item = (P().spikes or {}).item or 'es_jobs_spike_strip'
+    local item = (P().spikes or {}).item or 'whip_jobs_spike_strip'
     WC:AddItem(source, item, 1, nil, { reason = 'spike strip picked up' })
     return true
 end
@@ -219,11 +219,11 @@ end)
 
 -- ---------------------------------------------------------------- items
 local ITEMS = {
-    { key = function() return (P().breathalyzer or {}).item or 'es_jobs_breathalyzer' end, def = { name = 'Breathalyzer', weight = 0.3, stack = false,
+    { key = function() return (P().breathalyzer or {}).item or 'whip_jobs_breathalyzer' end, def = { name = 'Breathalyzer', weight = 0.3, stack = false,
         desc = 'Police: aim at a person, Police > Breathalyzer.', image = 'html/img/items/breathalyzer.webp' } },
-    { key = function() return (P().drugTest or {}).item or 'es_jobs_drug_test' end, def = { name = 'Drug test kit', weight = 0.1, stack = true, maxStack = 20,
+    { key = function() return (P().drugTest or {}).item or 'whip_jobs_drug_test' end, def = { name = 'Drug test kit', weight = 0.1, stack = true, maxStack = 20,
         desc = 'Police: aim at a person, Police > Drug swab. One per test.', image = 'html/img/items/drug_test_kit.webp' } },
-    { key = function() return (P().spikes or {}).item or 'es_jobs_spike_strip' end, def = { name = 'Spike strip', weight = 4.0, stack = true, maxStack = 3, usable = true,
+    { key = function() return (P().spikes or {}).item or 'whip_jobs_spike_strip' end, def = { name = 'Spike strip', weight = 4.0, stack = true, maxStack = 3, usable = true,
         desc = 'Police: use it to lay it across the road in front of you. Pick it up again at the strip.', image = 'html/img/items/spike_strip.webp' } },
 }
 
@@ -233,20 +233,20 @@ function ESJ.registerPolice(cb)
         local def = {}
         for k, v in pairs(it.def) do def[k] = v end
         local ok, why = Whip.core:RegisterItem(key, def)
-        if not ok then print(('^3[es_jobs] item %s: %s (another script\'s item of that name is used)^7'):format(key, tostring(why))) end
+        if not ok then print(('^3[whip_jobs] item %s: %s (another script\'s item of that name is used)^7'):format(key, tostring(why))) end
     end
-    Whip.core:RegisterUseHandler((P().spikes or {}).item or 'es_jobs_spike_strip', function(source)
+    Whip.core:RegisterUseHandler((P().spikes or {}).item or 'whip_jobs_spike_strip', function(source)
         if not officer(source) then return false, 'Only police on duty lay spike strips' end
-        TriggerClientEvent('es_jobs:client:laySpike', source)
+        TriggerClientEvent('whip_jobs:client:laySpike', source)
         return false   -- kept until it is really laid
     end)
-    cb('es_jobs:pol:seat', 900, seat)
-    cb('es_jobs:pol:out', 900, out)
-    cb('es_jobs:pol:breath', 3000, breath)
-    cb('es_jobs:pol:drug', 3000, drug)
-    cb('es_jobs:pol:spike', 1500, spike)
-    cb('es_jobs:pol:unspike', 1000, unspike)
-    cb('es_jobs:pol:spikes', 2000, function(source) pushStrips(source) return true end)
+    cb('whip_jobs:pol:seat', 900, seat)
+    cb('whip_jobs:pol:out', 900, out)
+    cb('whip_jobs:pol:breath', 3000, breath)
+    cb('whip_jobs:pol:drug', 3000, drug)
+    cb('whip_jobs:pol:spike', 1500, spike)
+    cb('whip_jobs:pol:unspike', 1000, unspike)
+    cb('whip_jobs:pol:spikes', 2000, function(source) pushStrips(source) return true end)
 end
 
 AddEventHandler('whip_core:player:loaded', function(e)

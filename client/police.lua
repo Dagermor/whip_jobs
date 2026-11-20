@@ -1,4 +1,4 @@
--- es_jobs: police on this game. With es_jail's cuffs: "Put in car" at a car's door (the person you escort, or the
+-- whip_jobs: police on this game. With es_jail's cuffs: "Put in car" at a car's door (the person you escort, or the
 -- cuffed person beside you), "Take out" at the door of the seat a cuffed person sits in (then you hold them: WHIP's
 -- escort). "Police" on a person: breathalyzer and drug swab. Spike strips: use the item to lay one ahead of you; a
 -- car driven over it loses the tyres that cross it; officers pick it up again at the strip.
@@ -74,7 +74,7 @@ local function addDoor(part, seat)
                 local sid, holding = toSeat()
                 if not sid then return end
                 if holding then ExecuteCommand('escort_release') Wait(150) end
-                local okc, why = ESJ.call('es_jobs:pol:seat', { target = sid, netId = NetworkGetNetworkIdFromEntity(ctx.entity), seat = seat })
+                local okc, why = ESJ.call('whip_jobs:pol:seat', { target = sid, netId = NetworkGetNetworkIdFromEntity(ctx.entity), seat = seat })
                 if not okc then WC:Notify(why, 'error') end
             end })
         if ok then added[id] = true end
@@ -85,7 +85,7 @@ local function addDoor(part, seat)
         onSelect = function(ctx)
             local sid = seatedAt(ctx.entity, seat)
             if not sid then return end
-            local okc, why = ESJ.call('es_jobs:pol:out', { target = sid })
+            local okc, why = ESJ.call('whip_jobs:pol:out', { target = sid })
             if not okc then WC:Notify(why, 'error') return end
             -- hold them once they are out (WHIP's escort grabs the nearest person: only when that is them)
             CreateThread(function()
@@ -127,9 +127,9 @@ local function addPerson()
         require = { job = JOBS, onDuty = true },
         canInteract = function(ctx) return ctx.player ~= nil end,
         options = {
-            { id = 'breath', label = 'Breathalyzer', require = { item = B.item or 'es_jobs_breathalyzer' },
-                canInteract = function(ctx) return ctx.player and not ctx.player.isDead end, onSelect = run('es_jobs:pol:breath') },
-            { id = 'drug', label = 'Drug swab', require = { item = T.item or 'es_jobs_drug_test' }, onSelect = run('es_jobs:pol:drug') },
+            { id = 'breath', label = 'Breathalyzer', require = { item = B.item or 'whip_jobs_breathalyzer' },
+                canInteract = function(ctx) return ctx.player and not ctx.player.isDead end, onSelect = run('whip_jobs:pol:breath') },
+            { id = 'drug', label = 'Drug swab', require = { item = T.item or 'whip_jobs_drug_test' }, onSelect = run('whip_jobs:pol:drug') },
         } })
     if ok then added.esj_pol_person = true end
 end
@@ -157,7 +157,7 @@ local function addSpikes()
         onSelect = function(ctx)
             local s = stripNear(ctx.coords or GetEntityCoords(PlayerPedId()), 6.0)
             if not s then WC:Notify('That strip is not one of ours', 'error') return end
-            local okc, why = ESJ.call('es_jobs:pol:unspike', { id = s.id })
+            local okc, why = ESJ.call('whip_jobs:pol:unspike', { id = s.id })
             if not okc then WC:Notify(why, 'error') end
         end })
     if ok then added.esj_pol_spike = true end
@@ -182,7 +182,7 @@ ESJ.onOrgs = function()
 end
 
 -- ---------------------------------------------------------------- the cuffed person's own game
-RegisterNetEvent('es_jobs:client:seat', function(netId, seat)
+RegisterNetEvent('whip_jobs:client:seat', function(netId, seat)
     CreateThread(function()
         local t = GetGameTimer() + 2000
         while GetGameTimer() < t and (WC:IsBeingEscorted() == true) do Wait(50) end
@@ -195,7 +195,7 @@ RegisterNetEvent('es_jobs:client:seat', function(netId, seat)
     end)
 end)
 
-RegisterNetEvent('es_jobs:client:out', function()
+RegisterNetEvent('whip_jobs:client:out', function()
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
     if veh == 0 then return end
@@ -207,7 +207,7 @@ RegisterNetEvent('es_jobs:client:out', function()
 end)
 
 -- ---------------------------------------------------------------- laying a strip, and driving over one
-RegisterNetEvent('es_jobs:client:laySpike', function()
+RegisterNetEvent('whip_jobs:client:laySpike', function()
     CreateThread(function()
         local ped = PlayerPedId()
         if IsPedInAnyVehicle(ped, false) then WC:Notify('Get out first', 'error') return end
@@ -228,12 +228,12 @@ RegisterNetEvent('es_jobs:client:laySpike', function()
         local okP = WC:Progress('Laying the spike strip...', 1600, { anim = { dict = 'amb@medic@standing@kneel@base', clip = 'base', flag = 1 },
             disable = { move = true, combat = true } })
         if okP ~= true then return end
-        local okc, why = ESJ.call('es_jobs:pol:spike', { x = c.x, y = c.y, z = z, h = alongX and h or (h + 90.0) })
+        local okc, why = ESJ.call('whip_jobs:pol:spike', { x = c.x, y = c.y, z = z, h = alongX and h or (h + 90.0) })
         if not okc then WC:Notify(why, 'error') else WC:Notify('Spike strip down', 'success') end
     end)
 end)
 
-RegisterNetEvent('es_jobs:client:spikes', function(list) STRIPS = type(list) == 'table' and list or {} end)
+RegisterNetEvent('whip_jobs:client:spikes', function(list) STRIPS = type(list) == 'table' and list or {} end)
 
 local WHEELS = { { 'wheel_lf', 0 }, { 'wheel_rf', 1 }, { 'wheel_lm1', 2 }, { 'wheel_rm1', 3 }, { 'wheel_lr', 4 }, { 'wheel_rr', 5 } }
 local function segDist(p, a, b)
@@ -308,7 +308,7 @@ end)
 CreateThread(function()
     Whip.ready()
     Wait(4000)
-    ESJ.call('es_jobs:pol:spikes', {})
+    ESJ.call('whip_jobs:pol:spikes', {})
 end)
 
 AddEventHandler('onResourceStop', function(r)

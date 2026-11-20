@@ -1,4 +1,4 @@
-// es_jobs: Businesses (/business). Player-owned businesses made like a department (name, short name, colour, logo with
+// whip_jobs: Businesses (/business). Player-owned businesses made like a department (name, short name, colour, logo with
 // a live preview), their ranks and pay, staff (hire someone standing near, set rank, let go), money (the business
 // account and its ledger) and stations. Departments the player leads show here too, for pay, money and stations.
 (function () {
@@ -166,7 +166,7 @@
     const total = Math.ceil(dataUrl.length / CHUNK);
     let r;
     for (let i = 1; i <= total; i++) {
-      r = await call('es_jobs:biz:logoPart', { id, i, total, part: dataUrl.slice((i - 1) * CHUNK, i * CHUNK) });
+      r = await call('whip_jobs:biz:logoPart', { id, i, total, part: dataUrl.slice((i - 1) * CHUNK, i * CHUNK) });
       if (!r.ok) return r;
     }
     if (r && r.ok && r.data.logoVer) J.setLogo('biz:' + id, r.data.logoVer, dataUrl);
@@ -175,7 +175,7 @@
 
   // ---------------------------------------------------------------- list
   async function loadList(keep) {
-    const r = await call('es_jobs:biz:list', {});
+    const r = await call('whip_jobs:biz:list', {});
     if (!said(r)) return;
     Object.assign(B, { list: r.data.list, admin: r.data.admin, canCreate: r.data.canCreate, price: r.data.price });
     $('#bz-new').classList.toggle('hidden', !B.canCreate);
@@ -207,7 +207,7 @@
     B.creating = false; B.jobId = jobId;
     if (!keepTab) B.tab = 'overview';
     renderList();
-    const r = await call('es_jobs:org:get', { jobId });
+    const r = await call('whip_jobs:org:get', { jobId });
     if (!said(r)) return;
     B.cur = r.data;
     renderDetail();
@@ -253,7 +253,7 @@
         <div class="row actions"><button class="btn danger" id="bo-del">Close ${esc(b.short)}</button></div></div>` : ''}`;
     if (can) {
       $('#bo-save').onclick = (e) => busy(e.currentTarget, async () => {
-        const r = await call('es_jobs:biz:update', { id: b.id, name: $('#bo-name').value, short: $('#bo-short').value, color: $('#bo-color').value,
+        const r = await call('whip_jobs:biz:update', { id: b.id, name: $('#bo-name').value, short: $('#bo-short').value, color: $('#bo-color').value,
           blurb: $('#bo-blurb').value, newOwner: $('#bo-owner') && $('#bo-owner').value ? +$('#bo-owner').value : null });
         if (said(r, 'Saved')) await loadList(true);
       });
@@ -268,7 +268,7 @@
     } else J.logoOf(o).then((src) => { const x = $('#bo-logobox'); if (x) x.innerHTML = src ? `<img src="${src}">` : '<span class="hint">No logo</span>'; });
     const del = $('#bo-del'); if (del) del.onclick = async () => {
       if (!(await confirm(`Close ${b.name}?`, 'Its job, ranks and staff list go for good. Stations it shares keep their other departments.', 'Close business', true))) return;
-      const r = await call('es_jobs:biz:delete', { id: b.id });
+      const r = await call('whip_jobs:biz:delete', { id: b.id });
       if (said(r, 'Business closed')) { B.jobId = null; B.cur = null; await loadList(); }
     };
   }
@@ -285,7 +285,7 @@
         ${biz ? `<td class="hint">${PERMS.filter(([k]) => r.perms[k]).map(([, l]) => esc(l.split(' ')[0])).join(', ') || '-'}</td>
         <td>${canRank ? `<button class="btn sm ghost" data-rk="${r.roleId}">Edit</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>`;
     $$('[data-pay]', el).forEach((inp) => inp.onchange = async () => {
-      const r = await call('es_jobs:pay:set', { jobId: d.org.jobId, roleId: +inp.dataset.pay, amount: inp.value === '' ? null : +inp.value });
+      const r = await call('whip_jobs:pay:set', { jobId: d.org.jobId, roleId: +inp.dataset.pay, amount: inp.value === '' ? null : +inp.value });
       if (said(r, r.data && r.data.default ? `Back to the default (${money(r.data.amount)})` : 'Pay saved')) inp.value = r.data.default ? '' : r.data.amount;
     });
     $$('[data-rk]', el).forEach((b) => b.onclick = () => rankEdit(d.ranks.find((x) => x.roleId === +b.dataset.rk)));
@@ -302,11 +302,11 @@
       <div class="row end">${isNew ? '' : '<button class="btn danger" id="rk-del">Delete rank</button>'}<span style="flex:1"></span><button class="btn ghost" data-m="x">Cancel</button><button class="btn accent" id="rk-save">Save</button></div>`, (c, done) => {
       $('#rk-save', c).onclick = (e) => busy(e.currentTarget, async () => {
         const perms = {}; $$('[data-perm]', c).forEach((x) => perms[x.dataset.perm] = x.checked);
-        const x = await call('es_jobs:biz:rank', { id: d.biz.id, roleId: r.roleId, name: $('#rk-name', c).value, level: +$('#rk-level', c).value, perms });
+        const x = await call('whip_jobs:biz:rank', { id: d.biz.id, roleId: r.roleId, name: $('#rk-name', c).value, level: +$('#rk-level', c).value, perms });
         if (said(x, 'Rank saved')) { done(); await select(B.jobId, true); }
       });
       const del = $('#rk-del', c); if (del) del.onclick = (e) => busy(e.currentTarget, async () => {
-        const x = await call('es_jobs:biz:rankDelete', { id: d.biz.id, roleId: r.roleId });
+        const x = await call('whip_jobs:biz:rankDelete', { id: d.biz.id, roleId: r.roleId });
         if (said(x, 'Rank deleted')) { done(); await select(B.jobId, true); }
       });
     });
@@ -325,13 +325,13 @@
         <td><span class="pill ${m.onDuty ? 'on' : 'off'}">${m.onDuty ? 'On duty' : m.online ? 'In the city' : 'Away'}</span></td>
         <td>${rt.fire && !m.owner ? `<button class="btn sm ghost" data-fire="${m.charId}">Let go</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
     $$('[data-rank]', el).forEach((s) => s.onchange = async () => {
-      const r = await call('es_jobs:biz:setRank', { id: d.biz.id, charId: +s.dataset.rank, roleId: +s.value });
+      const r = await call('whip_jobs:biz:setRank', { id: d.biz.id, charId: +s.dataset.rank, roleId: +s.value });
       if (said(r, 'Rank changed')) await select(B.jobId, true);
     });
     $$('[data-fire]', el).forEach((b) => b.onclick = async () => {
       const m = d.roster.find((x) => x.charId === +b.dataset.fire);
       if (!(await confirm(`Let ${m.name} go?`, `They stop working at ${d.biz.name}.`, 'Let go', true))) return;
-      const r = await call('es_jobs:biz:fire', { id: d.biz.id, charId: m.charId });
+      const r = await call('whip_jobs:biz:fire', { id: d.biz.id, charId: m.charId });
       if (said(r, `${m.name} no longer works here`)) await select(B.jobId, true);
     });
     const h = $('#sf-hire'); if (h) h.onclick = () => busy(h, hire);
@@ -339,7 +339,7 @@
 
   async function hire() {
     const d = B.cur;
-    const r = await call('es_jobs:biz:nearby', { id: d.biz.id });
+    const r = await call('whip_jobs:biz:nearby', { id: d.biz.id });
     if (!said(r)) return;
     const people = r.data || [];
     const low = d.ranks.slice().sort((a, b) => a.level - b.level);
@@ -349,7 +349,7 @@
       : '<div class="list-empty">Nobody is standing near you. Ask them to come closer, then try again.</div>'}
       <div class="row end"><button class="btn" data-m="x">Close</button></div>`, (c, done) => {
       $$('[data-hire]', c).forEach((b) => b.onclick = () => busy(b, async () => {
-        const x = await call('es_jobs:biz:hire', { id: d.biz.id, target: +b.dataset.hire, roleId: +$('#hi-rank', c).value });
+        const x = await call('whip_jobs:biz:hire', { id: d.biz.id, target: +b.dataset.hire, roleId: +$('#hi-rank', c).value });
         if (said(x, 'Hired')) { done(); await select(B.jobId, true); }
       }));
     });
@@ -407,7 +407,7 @@
       const name = $('#cr-name').value.trim(), short = $('#cr-short').value.trim();
       if (name.length < 3) { toast('The name needs 3 letters or more', 'err'); return; }
       if (!/^[\w&-]{2,12}$/.test(short)) { toast('The short name is 2-12 letters, digits, & or -', 'err'); return; }
-      const r = await call('es_jobs:biz:create', { name, short, color: $('#cr-color').value, blurb: $('#cr-blurb').value, owner: $('#cr-owner') && $('#cr-owner').value ? +$('#cr-owner').value : null });
+      const r = await call('whip_jobs:biz:create', { name, short, color: $('#cr-color').value, blurb: $('#cr-blurb').value, owner: $('#cr-owner') && $('#cr-owner').value ? +$('#cr-owner').value : null });
       if (!said(r, `${name} is open`)) return;
       const u = PK.cur && PK.cur.value();
       if (u) { const x = await uploadLogo(r.data.id, u); if (!x.ok) toast('Opened, but the logo did not save: ' + (x.why || ''), 'err'); }

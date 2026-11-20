@@ -1,4 +1,4 @@
--- es_jobs: what a station's spots do. Duty (clock on and off), the armory (equipment by rank, free, logged), the fleet
+-- whip_jobs: what a station's spots do. Duty (clock on and off), the armory (equipment by rank, free, logged), the fleet
 -- (garage / helipad / boat dock: a temporary vehicle by rank, one each, back at a garage or gone at clock off) and the
 -- personal locker. Every action checks, here: the spot exists, they stand at it, and they belong (and, for gear, are on
 -- duty) at one of the station's departments or businesses.
@@ -209,13 +209,13 @@ local function fleetTake(source, d)
     local plate = ((o and o.short or 'FLEET'):gsub('[^%w]', ''):upper():sub(1, 4)) .. tostring(math.random(1000, 9999))
     local mins = (Config.Gear or {}).fleetDespawnMinutes or 0
     local id, why = WC:SpawnTempVehicle(v.model, { x = p.x, y = p.y, z = p.z, heading = p.h }, { forSource = source, giveKey = true,
-        plate = plate:sub(1, 8), tag = 'es_jobs_fleet', locked = false, idleDespawn = true, secure = true,
+        plate = plate:sub(1, 8), tag = 'whip_jobs_fleet', locked = false, idleDespawn = true, secure = true,
         despawnAfter = mins > 0 and mins * 60 or nil })
     if not id then return false, why or 'It could not be brought out' end
     fleet[cid] = { vehicleId = id, jobId = me.dutyJob, model = v.model, label = v.label, plate = plate, station = st.id }
     byVeh[id] = cid
-    WC:LogActivity(source, 'es_jobs_fleet', { detail = ('%s %s (%s) at %s'):format(o and o.short or '', v.label, plate, st.name) })
-    TriggerClientEvent('es_jobs:client:fleetOut', source, { x = p.x, y = p.y, z = p.z, livery = v.livery, plate = plate })
+    WC:LogActivity(source, 'whip_jobs_fleet', { detail = ('%s %s (%s) at %s'):format(o and o.short or '', v.label, plate, st.name) })
+    TriggerClientEvent('whip_jobs:client:fleetOut', source, { x = p.x, y = p.y, z = p.z, livery = v.livery, plate = plate })
     return { plate = plate, label = v.label }
 end
 
@@ -267,7 +267,8 @@ local function lockerOpen(source, d)
     local id = lockerIds[cid]
     if not id then
         -- one locker per character, the same at every station; it has no place of its own (opened from here only)
-        local c, why = WC:EnsureContainer('es_jobs:locker:' .. cid, { x = 0.0, y = 0.0, z = -190.0, name = 'Personal locker',
+        local c, why = WC:EnsureContainer('es_jobs:locker:' .. cid,   -- 0.5.0: the es_jobs-era key on purpose: lockers keep their items
+            { x = 0.0, y = 0.0, z = -190.0, name = 'Personal locker',
             slots = G.lockerSlots, maxWeight = G.lockerWeight or 40.0, prop = false, requirements = { charIds = { cid } } })
         if not c then return false, why or 'Your locker could not be opened' end
         id = c.containerId or c.id
@@ -282,13 +283,13 @@ end
 function ESJ.fleetOf(cid) return fleet[cid] end
 
 function ESJ.registerGear(cb)
-    cb('es_jobs:spot:open', 400, function(source, d) return openSpot(source, d) end)
-    cb('es_jobs:duty', 1200, function(source, d) return duty(source, d) end)
-    cb('es_jobs:armory:take', 350, function(source, d) return armoryTake(source, d) end)
-    cb('es_jobs:armory:return', 350, function(source, d) return armoryReturn(source, d) end)
-    cb('es_jobs:fleet:take', 2500, function(source, d) return fleetTake(source, d) end)
-    cb('es_jobs:fleet:return', 1500, function(source, d) return fleetReturn(source, d) end)
-    cb('es_jobs:locker:open', 1000, function(source, d) return lockerOpen(source, d) end)
+    cb('whip_jobs:spot:open', 400, function(source, d) return openSpot(source, d) end)
+    cb('whip_jobs:duty', 1200, function(source, d) return duty(source, d) end)
+    cb('whip_jobs:armory:take', 350, function(source, d) return armoryTake(source, d) end)
+    cb('whip_jobs:armory:return', 350, function(source, d) return armoryReturn(source, d) end)
+    cb('whip_jobs:fleet:take', 2500, function(source, d) return fleetTake(source, d) end)
+    cb('whip_jobs:fleet:return', 1500, function(source, d) return fleetReturn(source, d) end)
+    cb('whip_jobs:locker:open', 1000, function(source, d) return lockerOpen(source, d) end)
 end
 
 AddEventHandler('onResourceStop', function(r)

@@ -1,4 +1,4 @@
--- es_jobs: organisations. A department (es_mdt's /departments) or a business (ours, /business). Both are WHIP jobs, so
+-- whip_jobs: organisations. A department (es_mdt's /departments) or a business (ours, /business). Both are WHIP jobs, so
 -- everything here is keyed by jobId: stations list jobIds, pay is per WHIP role, money goes to the job's bank account.
 -- es_mdt is optional: without it there are only businesses (and the stations keep any department they listed, unused).
 ESJ = ESJ or {}
@@ -67,7 +67,8 @@ end
 
 function ESJ.isAdmin(source)
     if not source or source <= 0 then return false end
-    if WC:HasDevTools(source) == true or IsPlayerAceAllowed(source, Config.AdminAce or 'es_jobs.admin') then return true end
+    if WC:HasDevTools(source) == true or IsPlayerAceAllowed(source, Config.AdminAce or 'whip_jobs.admin')
+        or IsPlayerAceAllowed(source, 'es_jobs.admin') then return true end   -- 0.5.0: the ace from before the rename still works
     if mdtOn() then
         local ok, staff = pcall(function() return exports.es_mdt:IsStaff(source) end)
         if ok and staff == true then return true end

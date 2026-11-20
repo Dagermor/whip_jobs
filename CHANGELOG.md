@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 (2026-11-20)
+
+- **Renamed es_jobs → whip_jobs** (resource, repository, exports, callbacks, events, page, commands' ace, docs). A community resource, not an official WHIPFX one.
+- Data is kept: the database tables keep their `es_jobs_` names, and personal lockers keep their containers. Saved settings move with one SQL line (README → Upgrading from es_jobs).
+- The `es_jobs.admin` ace still works next to the new `whip_jobs.admin`.
+- Items are now `whip_jobs_*` (breathalyzer, drug test, spike strip, first aid, medical bag); the names are in `config.lua`.
+- whip_jobs will not start while the old es_jobs is still running.
+- Use with es_mdt 2.4.2, which finds the job pack as whip_jobs or es_jobs.
+
 ## 0.4.0 (2026-11-20)
 
 - **Courthouse spots for the DOJ**, set up like the police: court clerk window, courtroom (bailiff), judge's chambers / bench, District Attorney's office and public defender's office. Each has its own default ped (clerk, bailiff, judge, receptionist, lawyer), changeable with a picture in the station editor or in `/whip` → Settings → Jobs.

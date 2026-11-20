@@ -1,4 +1,4 @@
-// es_jobs: the station editor (admin menu /w -> Stations, Departments -> Locations, /business). A station: a name, the departments and businesses that share it, a blip, and
+// whip_jobs: the station editor (admin menu /w -> Stations, Departments -> Locations, /business). A station: a name, the departments and businesses that share it, a blip, and
 // its spots. Spots are placed with WHIP's ghost (the ped itself, or the vehicle for a parking space), "my position" or
 // typed in; each change is saved as a whole, with the previous version kept (undo, history, restore, backups).
 (function () {
@@ -357,7 +357,7 @@
   async function save() {
     const p = problems(); if (p) { toast(p, 'err'); return; }
     const c = E.cur;
-    const r = await call('es_jobs:st:save', { id: c.id, rev: c.rev, name: c.name, jobs: c.jobs, blip: c.blip, spots: c.spots });
+    const r = await call('whip_jobs:st:save', { id: c.id, rev: c.rev, name: c.name, jobs: c.jobs, blip: c.blip, spots: c.spots });
     if (!said(r, 'Station saved')) return;
     c.id = r.data.id; c.rev = r.data.rev; c.spots = r.data.spots;
     E.orig = JSON.stringify(strip(c));
@@ -365,32 +365,32 @@
   }
   async function undo() {
     if (dirty() && !(await confirm('Undo the last save?', 'Your unsaved changes go too.', 'Undo', true))) return;
-    const r = await call('es_jobs:st:undo', { id: E.cur.id });
+    const r = await call('whip_jobs:st:undo', { id: E.cur.id });
     if (!said(r, 'Back to the version before the last save')) return;
     await reload(E.cur.id, true);
   }
   async function del() {
     const c = E.cur;
     if (!(await confirm('Delete this station?', `${c.name}: its peds, prompts and blip go for everyone. An admin can bring it back from Deleted.`, 'Delete', true))) return;
-    const r = await call('es_jobs:st:delete', { id: c.id });
+    const r = await call('whip_jobs:st:delete', { id: c.id });
     if (!said(r, 'Station deleted')) return;
     E.cur = null; await reload();
   }
   async function history() {
-    const r = await call('es_jobs:st:history', { id: E.cur.id });
+    const r = await call('whip_jobs:st:history', { id: E.cur.id });
     if (!said(r)) return;
     const rows = r.data || [];
     modal(`<h2>History: ${esc(E.cur.name)}</h2><div class="hist">${rows.map((h) => `<div class="h"><div class="t"><b>${esc(h.action)}</b><span>${esc(h.who)} · ${J.ago(h.at)} · ${h.spots} spots</span></div>
       ${E.cur.canEdit ? `<button class="btn sm" data-restore="${h.id}">Restore this</button>` : ''}</div>`).join('') || '<div class="list-empty">No earlier versions yet.</div>'}</div>
       <div class="row end"><button class="btn" data-m="x">Close</button></div>`, (c, done) => {
       $$('[data-restore]', c).forEach((b) => b.onclick = () => busy(b, async () => {
-        const x = await call('es_jobs:st:restore', { historyId: +b.dataset.restore });
+        const x = await call('whip_jobs:st:restore', { historyId: +b.dataset.restore });
         if (said(x, 'Restored')) { done(); await reload(x.data.id, true); }
       }));
     });
   }
   async function reload(selectId, force) {
-    const r = await call('es_jobs:st:list', {});
+    const r = await call('whip_jobs:st:list', {});
     if (!r.ok) { said(r); return; }
     E.data = r.data;
     if (selectId) { const keepSel = E.sel; if (force || !E.cur || E.cur.id !== selectId) E.cur = null; await pick(selectId); if (E.cur && keepSel >= 0 && keepSel < E.cur.spots.length) { E.sel = keepSel; renderSpots(); renderDetail(); } }
@@ -399,7 +399,7 @@
 
   // ---------------------------------------------------------------- backups (admins)
   async function exportAll() {
-    const r = await call('es_jobs:st:export', {});
+    const r = await call('whip_jobs:st:export', {});
     if (!said(r)) return;
     const text = JSON.stringify(r.data, null, 1);
     modal(`<h2>Station backup</h2><p class="hint">${r.data.stations.length} stations. Copy this and keep it somewhere safe; Restore backup puts it back.</p>
@@ -409,9 +409,9 @@
   }
   async function importAll() {
     modal(`<h2>Restore a backup</h2><p class="hint">Paste a backup. Stations with the same number are replaced (what they are now stays in their history); the others are added.</p>
-      <textarea id="im-text" placeholder='{"es_jobs":"0.1","stations":[...]}'></textarea><div class="row end"><button class="btn ghost" data-m="x">Cancel</button><button class="btn accent" id="im-go">Restore</button></div>`, (c, done) => {
+      <textarea id="im-text" placeholder='{"whip_jobs":"0.1","stations":[...]}'></textarea><div class="row end"><button class="btn ghost" data-m="x">Cancel</button><button class="btn accent" id="im-go">Restore</button></div>`, (c, done) => {
       $('#im-go', c).onclick = (e) => busy(e.currentTarget, async () => {
-        const r = await call('es_jobs:st:import', { text: $('#im-text', c).value });
+        const r = await call('whip_jobs:st:import', { text: $('#im-text', c).value });
         if (said(r, `${r.data && r.data.count} stations restored`)) { done(); E.cur = null; await reload(); }
       });
     });
@@ -421,7 +421,7 @@
     modal(`<h2>Deleted stations</h2><div class="hist">${rows.map((h) => `<div class="h"><div class="t"><b>${esc(h.name)}</b><span>#${h.stationId} · deleted ${J.ago(h.at)}</span></div>
       <button class="btn sm" data-back="${h.id}">Bring back</button></div>`).join('') || '<div class="list-empty">Nothing deleted.</div>'}</div><div class="row end"><button class="btn" data-m="x">Close</button></div>`, (c, done) => {
       $$('[data-back]', c).forEach((b) => b.onclick = () => busy(b, async () => {
-        const r = await call('es_jobs:st:restore', { historyId: +b.dataset.back });
+        const r = await call('whip_jobs:st:restore', { historyId: +b.dataset.back });
         if (said(r, 'Station is back')) { done(); await reload(r.data.id, true); }
       }));
     });
@@ -450,5 +450,5 @@
     },
     pad: { keys: [['Esc', 'Close']] },
   };
-  J.stations = { open: async (jobId) => { const r = await call('es_jobs:st:list', {}); if (!said(r)) return; r.data.focusJob = jobId; J.show('stations', r.data); } };
+  J.stations = { open: async (jobId) => { const r = await call('whip_jobs:st:list', {}); if (!said(r)) return; r.data.focusJob = jobId; J.show('stations', r.data); } };
 })();

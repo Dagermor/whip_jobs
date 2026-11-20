@@ -1,4 +1,4 @@
--- es_jobs 0.3.0: EMS. Wounded and down, the calls (es_mdt), first aid, EMS treatment, the hospital desk, medical
+-- whip_jobs 0.3.0: EMS. Wounded and down, the calls (es_mdt), first aid, EMS treatment, the hospital desk, medical
 -- records and bills.
 --
 -- Dying (WHIP's own death) first makes a player WOUNDED: WHIP revives them where they fell, and their own game keeps
@@ -62,7 +62,7 @@ local function setState(src, v)
     pcall(function() Player(src).state:set('esHurt', v, true) end)
 end
 
-local function tell(src, d) TriggerClientEvent('es_jobs:client:hurt', src, d) end
+local function tell(src, d) TriggerClientEvent('whip_jobs:client:hurt', src, d) end
 
 -- ---------------------------------------------------------------- records and bills
 --- a medical record: { charId, name, kind, injury, treatment, notes, jobId, bill, byCharId, byName, place } -> id
@@ -166,7 +166,7 @@ end
 local function clear(src, h)
     if Hurt[src] == h or h == nil then Hurt[src] = nil end
     setState(src, nil)
-    pcall(function() WC:ReleaseRespawn(src, 'es_jobs_ems') end)
+    pcall(function() WC:ReleaseRespawn(src, 'whip_jobs_ems') end)
 end
 
 local function newHurt(src, info, e)
@@ -182,13 +182,13 @@ local function toDown(src, h, why)
     setState(src, 'down')
     callFor(src, h, true)
     tell(src, { state = 'down', called = h.callId ~= nil, why = why })
-    WC:LogActivity(src, 'es_jobs_ems', { detail = ('down%s'):format(why and (' (' .. why .. ')') or '') })
+    WC:LogActivity(src, 'whip_jobs_ems', { detail = ('down%s'):format(why and (' (' .. why .. ')') or '') })
 end
 
 local function toWounded(src, info, e)
     local W = E().wounded or {}
     local h = newHurt(src, info, e)
-    local ok = WC:RevivePlayer(src, 'es_jobs: wounded')
+    local ok = WC:RevivePlayer(src, 'whip_jobs: wounded')
     if not ok then return toDown(src, h, 'could not be wounded') end
     local secs = h.headshot and (W.headshotSeconds or 60) or (W.seconds or 180)
     h.state, h.untilAt = 'wounded', now() + secs
@@ -198,7 +198,7 @@ local function toWounded(src, info, e)
     setState(src, 'wounded')
     tell(src, { state = 'wounded', left = secs, auto = auto > 0 and auto or nil, health = W.health or 120, headshot = h.headshot,
         crawl = W.crawlSpeed or 1.0 })
-    WC:LogActivity(src, 'es_jobs_ems', { detail = ('wounded for %ds%s'):format(secs, h.headshot and ' (headshot)' or '') })
+    WC:LogActivity(src, 'whip_jobs_ems', { detail = ('wounded for %ds%s'):format(secs, h.headshot and ' (headshot)' or '') })
 end
 
 --- their own game, the moment it died: the killing blow as it saw it (a headshot shortens the wounded timer)
@@ -278,7 +278,7 @@ local function tick()
                 end
                 if t >= h.untilAt and (not h.bleeding or t >= h.bleeding + 8) then
                     h.bleeding = t
-                    TriggerClientEvent('es_jobs:client:bleedOut', src)
+                    TriggerClientEvent('whip_jobs:client:bleedOut', src)
                 end
             end
         elseif h.state == 'down' then
@@ -301,9 +301,9 @@ local function tick()
                 end
                 if h.state == 'down' then
                     if n > 0 and (E().calls or {}).holdRespawn ~= false then
-                        WC:HoldRespawn(src, 'es_jobs_ems', ('EMS is on the way · %d unit%s'):format(n, n == 1 and '' or 's'))
+                        WC:HoldRespawn(src, 'whip_jobs_ems', ('EMS is on the way · %d unit%s'):format(n, n == 1 and '' or 's'))
                     else
-                        WC:ReleaseRespawn(src, 'es_jobs_ems')
+                        WC:ReleaseRespawn(src, 'whip_jobs_ems')
                     end
                 end
             end
@@ -315,7 +315,7 @@ CreateThread(function()
     while true do
         Wait(2000)
         local ok, err = pcall(tick)
-        if not ok then print(('^3[es_jobs] ems: %s^7'):format(tostring(err))) end
+        if not ok then print(('^3[whip_jobs] ems: %s^7'):format(tostring(err))) end
     end
 end)
 
@@ -364,7 +364,7 @@ end
 
 local function firstAid(source, d)
     local F = E().firstAid or {}
-    local item = F.item or 'es_jobs_first_aid'
+    local item = F.item or 'whip_jobs_first_aid'
     if not WC:HasItem(source, item) then return false, 'You need a first aid kit' end
     local t, them = targetOf(source, d)
     if not t then return false, them end
@@ -380,14 +380,14 @@ local function firstAid(source, d)
         byCharId = WC:GetCharId(source), byName = name(source), place = placeOf(t) })
     recover(t, F.health or 150, 'Patient helped up')
     WC:NotifyPlayer(source, 'You helped ' .. name(t) .. ' up', 'success')
-    WC:LogActivity(source, 'es_jobs_ems', { detail = 'first aid on ' .. name(t) })
+    WC:LogActivity(source, 'whip_jobs_ems', { detail = 'first aid on ' .. name(t) })
     return true
 end
 
 local function needMedic(source)
     local job = medic(source)
     if not job then return nil, 'Only EMS on duty' end
-    if not WC:HasItem(source, (E().medbag or {}).item or 'es_jobs_medbag') then return nil, 'You need a medical bag' end
+    if not WC:HasItem(source, (E().medbag or {}).item or 'whip_jobs_medbag') then return nil, 'You need a medical bag' end
     return job
 end
 
@@ -409,7 +409,7 @@ local function treat(source, d)
     recover(t, 200, 'Patient treated')
     ESJ.medBill(t, cid, job, B.treat or 0, 'Treatment', rid)
     WC:NotifyPlayer(source, 'Treated ' .. name(t), 'success')
-    WC:LogActivity(source, 'es_jobs_ems', { detail = 'treated ' .. name(t) })
+    WC:LogActivity(source, 'whip_jobs_ems', { detail = 'treated ' .. name(t) })
     return true
 end
 
@@ -424,7 +424,7 @@ local function revive(source, d)
     if not WC:IsPlayerDead(t) then return false, 'They are up already' end
     local h = Hurt[t] or newHurt(t, nil, nil)
     h.reviving = true
-    local okR, whyR = WC:RevivePlayer(t, 'es_jobs: EMS')
+    local okR, whyR = WC:RevivePlayer(t, 'whip_jobs: EMS')
     h.reviving = nil
     if not okR then return false, whyR or 'They could not be revived' end
     local cid = WC:GetCharId(t)
@@ -436,7 +436,7 @@ local function revive(source, d)
     tell(t, { state = 'none' })
     ESJ.medBill(t, cid, job, B.revive or 0, 'Revive', rid)
     WC:NotifyPlayer(source, 'Revived ' .. name(t), 'success')
-    WC:LogActivity(source, 'es_jobs_ems', { detail = 'revived ' .. name(t) })
+    WC:LogActivity(source, 'whip_jobs_ems', { detail = 'revived ' .. name(t) })
     return true
 end
 
@@ -611,16 +611,16 @@ local function waive(source, d)
     if not b or b.status ~= 'unpaid' then return false, 'That bill is not open' end
     if not ESJ.canManage(source, b.jobId) then return false, 'Only the department\'s leaders waive a bill' end
     MySQL.update.await("UPDATE `es_jobs_med_bills` SET `status` = 'waived', `paidAt` = NOW() WHERE `id` = ?", { b.id })
-    WC:LogActivity(source, 'es_jobs_ems', { detail = ('waived medical bill #%d ($%d) of #%d'):format(b.id, b.amount, b.charId) })
+    WC:LogActivity(source, 'whip_jobs_ems', { detail = ('waived medical bill #%d ($%d) of #%d'):format(b.id, b.amount, b.charId) })
     d.charId = b.charId
     return patient(source, d)
 end
 
 -- ---------------------------------------------------------------- items, callbacks
 local ITEMS = {
-    { key = function() return (E().firstAid or {}).item or 'es_jobs_first_aid' end, def = { name = 'First aid kit', weight = 0.5, stack = true, maxStack = 10,
+    { key = function() return (E().firstAid or {}).item or 'whip_jobs_first_aid' end, def = { name = 'First aid kit', weight = 0.5, stack = true, maxStack = 10,
         desc = 'Aim at someone wounded (yellow) and pick First aid to help them up. One per use.', image = 'html/img/items/first_aid.webp' } },
-    { key = function() return (E().medbag or {}).item or 'es_jobs_medbag' end, def = { name = 'Medical bag', weight = 3.0, stack = false,
+    { key = function() return (E().medbag or {}).item or 'whip_jobs_medbag' end, def = { name = 'Medical bag', weight = 3.0, stack = false,
         desc = 'EMS: aim at a patient, EMS > Examine, Treat or Revive.', image = 'html/img/items/medbag.webp' } },
 }
 
@@ -630,27 +630,27 @@ function ESJ.registerEms(cb)
         local def = {}
         for k, v in pairs(it.def) do def[k] = v end
         local ok, why = Whip.core:RegisterItem(key, def)
-        if not ok then print(('^3[es_jobs] item %s: %s (another script\'s item of that name is used)^7'):format(key, tostring(why))) end
+        if not ok then print(('^3[whip_jobs] item %s: %s (another script\'s item of that name is used)^7'):format(key, tostring(why))) end
     end
-    Whip.core:SecureEvent('es_jobs:ems:info', { rateLimit = 1000, burst = 2, sheet = 'light', whileDead = true, params = { { 'd', 'any' } } },
+    Whip.core:SecureEvent('whip_jobs:ems:info', { rateLimit = 1000, burst = 2, sheet = 'light', whileDead = true, params = { { 'd', 'any' } } },
         function(source, _, d) onInfo(source, d) end)
-    cb('es_jobs:ems:call', 2000, callEms)
-    cb('es_jobs:ems:aid', 1500, firstAid)
-    cb('es_jobs:ems:treat', 1500, treat)
-    cb('es_jobs:ems:revive', 1500, revive)
-    cb('es_jobs:ems:examine', 800, examine)
-    cb('es_jobs:ems:me', 1000, function(source)
+    cb('whip_jobs:ems:call', 2000, callEms)
+    cb('whip_jobs:ems:aid', 1500, firstAid)
+    cb('whip_jobs:ems:treat', 1500, treat)
+    cb('whip_jobs:ems:revive', 1500, revive)
+    cb('whip_jobs:ems:examine', 800, examine)
+    cb('whip_jobs:ems:me', 1000, function(source)
         local h = Hurt[source]
         if not h then return { state = 'none' } end
         return { state = h.state, left = h.untilAt and math.max(0, h.untilAt - now()) or nil, called = h.callId ~= nil, units = h.units or 0,
             health = (E().wounded or {}).health or 120, auto = h.autoAt and math.max(0, h.autoAt - now()) or nil }
     end)
-    cb('es_jobs:hosp:treat', 2500, deskTreat)
-    cb('es_jobs:hosp:pay', 2000, payBill)
-    cb('es_jobs:med:list', 800, records)
-    cb('es_jobs:med:patient', 600, patient)
-    cb('es_jobs:med:note', 2000, note)
-    cb('es_jobs:med:waive', 1500, waive)
+    cb('whip_jobs:hosp:treat', 2500, deskTreat)
+    cb('whip_jobs:hosp:pay', 2000, payBill)
+    cb('whip_jobs:med:list', 800, records)
+    cb('whip_jobs:med:patient', 600, patient)
+    cb('whip_jobs:med:note', 2000, note)
+    cb('whip_jobs:med:waive', 1500, waive)
 end
 
 --- es_mdt asks before its own "person down" alert: we file those (wounded and down calls) when EMS here is on

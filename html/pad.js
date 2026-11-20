@@ -1,4 +1,4 @@
-// es_jobs: controller support (copied from es_mdt 2.0.13's html/pad.js, same messages; client/pad.lua sends them).
+// whip_jobs: controller support (copied from es_mdt 2.0.13's html/pad.js, same messages; client/pad.lua sends them).
 // The game reads the pad (client/pad.lua, WHIP's Whip.padScreen: the browser cannot see a gamepad inside FiveM) and sends
 //   { action: 'padState', open, nav, pad, hints, sens, keyboard }   the screen opened / closed, a setting changed
 //   { action: 'pad', cmd, rep }        up down left right a b x y lb rb menu (rep: a held D-pad repeating)

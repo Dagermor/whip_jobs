@@ -1,22 +1,22 @@
--- es_jobs: the screen. One NUI page (html/) with three views: a station spot (duty, armory, garage, locker), the station
+-- whip_jobs: the screen. One NUI page (html/) with three views: a station spot (duty, armory, garage, locker), the station
 -- editor (admin menu / Departments -> Locations) and Businesses (/business). The page asks the server through `call` (a SecureCallback each).
 ESJ = ESJ or {}
 ESJ.ui = { open = false, view = nil }
 
 local ALLOWED = {
-    ['es_jobs:biz:list'] = true, ['es_jobs:org:get'] = true, ['es_jobs:biz:create'] = true, ['es_jobs:biz:update'] = true,
-    ['es_jobs:biz:logoPart'] = true, ['es_jobs:biz:logo'] = true, ['es_jobs:biz:rank'] = true, ['es_jobs:biz:rankDelete'] = true,
-    ['es_jobs:biz:nearby'] = true, ['es_jobs:biz:hire'] = true, ['es_jobs:biz:setRank'] = true, ['es_jobs:biz:fire'] = true,
-    ['es_jobs:biz:delete'] = true, ['es_jobs:pay:set'] = true,
-    ['es_jobs:st:list'] = true, ['es_jobs:st:save'] = true, ['es_jobs:st:delete'] = true, ['es_jobs:st:history'] = true,
-    ['es_jobs:st:restore'] = true, ['es_jobs:st:undo'] = true, ['es_jobs:st:export'] = true, ['es_jobs:st:import'] = true,
-    ['es_jobs:st:teleport'] = true,
-    ['es_jobs:spot:open'] = true, ['es_jobs:duty'] = true, ['es_jobs:armory:take'] = true, ['es_jobs:armory:return'] = true,
-    ['es_jobs:fleet:take'] = true, ['es_jobs:fleet:return'] = true, ['es_jobs:locker:open'] = true,
-    ['es_jobs:uni:list'] = true, ['es_jobs:uni:wear'] = true, ['es_jobs:uni:own'] = true, ['es_jobs:uni:save'] = true,
-    ['es_jobs:uni:delete'] = true, ['es_jobs:uni:order'] = true, ['es_jobs:imp:pay'] = true, ['es_jobs:imp:take'] = true,
-    ['es_jobs:hosp:treat'] = true, ['es_jobs:hosp:pay'] = true, ['es_jobs:med:list'] = true, ['es_jobs:med:patient'] = true,
-    ['es_jobs:med:note'] = true, ['es_jobs:med:waive'] = true,
+    ['whip_jobs:biz:list'] = true, ['whip_jobs:org:get'] = true, ['whip_jobs:biz:create'] = true, ['whip_jobs:biz:update'] = true,
+    ['whip_jobs:biz:logoPart'] = true, ['whip_jobs:biz:logo'] = true, ['whip_jobs:biz:rank'] = true, ['whip_jobs:biz:rankDelete'] = true,
+    ['whip_jobs:biz:nearby'] = true, ['whip_jobs:biz:hire'] = true, ['whip_jobs:biz:setRank'] = true, ['whip_jobs:biz:fire'] = true,
+    ['whip_jobs:biz:delete'] = true, ['whip_jobs:pay:set'] = true,
+    ['whip_jobs:st:list'] = true, ['whip_jobs:st:save'] = true, ['whip_jobs:st:delete'] = true, ['whip_jobs:st:history'] = true,
+    ['whip_jobs:st:restore'] = true, ['whip_jobs:st:undo'] = true, ['whip_jobs:st:export'] = true, ['whip_jobs:st:import'] = true,
+    ['whip_jobs:st:teleport'] = true,
+    ['whip_jobs:spot:open'] = true, ['whip_jobs:duty'] = true, ['whip_jobs:armory:take'] = true, ['whip_jobs:armory:return'] = true,
+    ['whip_jobs:fleet:take'] = true, ['whip_jobs:fleet:return'] = true, ['whip_jobs:locker:open'] = true,
+    ['whip_jobs:uni:list'] = true, ['whip_jobs:uni:wear'] = true, ['whip_jobs:uni:own'] = true, ['whip_jobs:uni:save'] = true,
+    ['whip_jobs:uni:delete'] = true, ['whip_jobs:uni:order'] = true, ['whip_jobs:imp:pay'] = true, ['whip_jobs:imp:take'] = true,
+    ['whip_jobs:hosp:treat'] = true, ['whip_jobs:hosp:pay'] = true, ['whip_jobs:med:list'] = true, ['whip_jobs:med:patient'] = true,
+    ['whip_jobs:med:note'] = true, ['whip_jobs:med:waive'] = true,
 }
 
 --- ask the server; returns ok, data|why
@@ -66,7 +66,7 @@ RegisterNUICallback('esj_deptLogo', function(d, cb)
     end)
 end)
 
-RegisterNetEvent('es_jobs:client:open', function(o)
+RegisterNetEvent('whip_jobs:client:open', function(o)
     o = type(o) == 'table' and o or {}
     if o.view == 'stations' then
         if ESJ.openEditor then ESJ.openEditor() end
@@ -75,7 +75,7 @@ RegisterNetEvent('es_jobs:client:open', function(o)
     end
 end)
 
-RegisterNetEvent('es_jobs:client:bizChanged', function(id)
+RegisterNetEvent('whip_jobs:client:bizChanged', function(id)
     if ESJ.ui.open then SendNUIMessage({ action = 'bizChanged', id = id }) end
 end)
 

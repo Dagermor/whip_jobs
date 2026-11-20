@@ -1,4 +1,4 @@
--- es_jobs: player-owned businesses (/business). Made like a department: a name, a short name, a colour and a logo with a
+-- whip_jobs: player-owned businesses (/business). Made like a department: a name, a short name, a colour and a logo with a
 -- live preview; ranks with pay; a roster (hire people standing near, set rank, let go); its own business bank account;
 -- stations placed with the same editor. WHIP keeps the job (EnsureJob with an owner), its roles, staff list and account;
 -- we keep the name, colours and logo. An admin makes one for its owner; Config.Business.playerCreate lets players pay to start one.
@@ -9,7 +9,7 @@ local CHUNK = 15000
 local uploads = {}                 -- [source] = { id, total, parts }
 
 local function log(source, what, detail)
-    if source and source > 0 then CreateThread(function() WC:LogActivity(source, 'es_jobs_' .. what, { detail = detail }) end) end
+    if source and source > 0 then CreateThread(function() WC:LogActivity(source, 'whip_jobs_' .. what, { detail = detail }) end) end
 end
 
 function ESJ.loadBusinesses()
@@ -39,7 +39,7 @@ function ESJ.bizRights(source, b)
 end
 
 local function changed(id)
-    TriggerClientEvent('es_jobs:client:bizChanged', -1, id)
+    TriggerClientEvent('whip_jobs:client:bizChanged', -1, id)
     if ESJ.onOrgsChanged then ESJ.onOrgsChanged() end
 end
 
@@ -179,7 +179,7 @@ local function create(source, d)
     -- the owner holds the top role (EnsureJob's owner); a business account for its money
     if not ESJ.account(job.jobId) then
         local acct, awhy = WC:CreateBankAccount({ charId = ownerCid }, info.name, { type = 'business', job = job.jobId })
-        if not acct then print(('^3[es_jobs] %s: the business account could not be made: %s^7'):format(info.name, tostring(awhy))) end
+        if not acct then print(('^3[whip_jobs] %s: the business account could not be made: %s^7'):format(info.name, tostring(awhy))) end
     end
     local start = admin and math.floor(tonumber(B.startBalance) or 0) or 0
     local acct = ESJ.account(job.jobId)
@@ -191,11 +191,11 @@ local function create(source, d)
 end
 
 function ESJ.registerBusiness(cb)
-    cb('es_jobs:biz:list', 300, function(source) return ESJ.bizList(source) end)
-    cb('es_jobs:org:get', 250, function(source, d) return ESJ.orgDetail(source, tonumber(d.jobId)) end)
-    cb('es_jobs:biz:create', 3000, function(source, d) return create(source, d) end)
+    cb('whip_jobs:biz:list', 300, function(source) return ESJ.bizList(source) end)
+    cb('whip_jobs:org:get', 250, function(source, d) return ESJ.orgDetail(source, tonumber(d.jobId)) end)
+    cb('whip_jobs:biz:create', 3000, function(source, d) return create(source, d) end)
 
-    cb('es_jobs:biz:update', 800, function(source, d)
+    cb('whip_jobs:biz:update', 800, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         local r = ESJ.bizRights(source, b)
@@ -222,7 +222,7 @@ function ESJ.registerBusiness(cb)
         return true
     end)
 
-    cb('es_jobs:biz:logoPart', 60, function(source, d)
+    cb('whip_jobs:biz:logoPart', 60, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.bizRights(source, b).manage then return false, 'Only its managers can change the logo' end
@@ -244,7 +244,7 @@ function ESJ.registerBusiness(cb)
         return { done = true, logoVer = ver }
     end, 40)
 
-    cb('es_jobs:biz:logo', 50, function(_, d)
+    cb('whip_jobs:biz:logo', 50, function(_, d)
         local b = bizOf(d.id)
         local data = b and ESJ.BizLogo[b.id]
         if not data then return { total = 0, ver = b and b.logoVer or 0 } end
@@ -253,7 +253,7 @@ function ESJ.registerBusiness(cb)
         return { total = total, ver = b.logoVer, part = data:sub((i - 1) * CHUNK + 1, i * CHUNK) }
     end, 40)
 
-    cb('es_jobs:biz:rank', 500, function(source, d)
+    cb('whip_jobs:biz:rank', 500, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.bizRights(source, b).manage then return false, 'Only its managers can change ranks' end
@@ -278,7 +278,7 @@ function ESJ.registerBusiness(cb)
         return roleId
     end)
 
-    cb('es_jobs:biz:rankDelete', 800, function(source, d)
+    cb('whip_jobs:biz:rankDelete', 800, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.bizRights(source, b).manage then return false, 'Only its managers can change ranks' end
@@ -289,7 +289,7 @@ function ESJ.registerBusiness(cb)
     end)
 
     --- people standing near them who could be hired (controller-friendly: pick from a list, no ids to type)
-    cb('es_jobs:biz:nearby', 600, function(source, d)
+    cb('whip_jobs:biz:nearby', 600, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         local ped = GetPlayerPed(source)
@@ -304,7 +304,7 @@ function ESJ.registerBusiness(cb)
         return out
     end)
 
-    cb('es_jobs:biz:hire', 800, function(source, d)
+    cb('whip_jobs:biz:hire', 800, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         local r = ESJ.bizRights(source, b)
@@ -323,7 +323,7 @@ function ESJ.registerBusiness(cb)
         return true
     end)
 
-    cb('es_jobs:biz:setRank', 500, function(source, d)
+    cb('whip_jobs:biz:setRank', 500, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.bizRights(source, b).promote then return false, 'Your rank cannot promote or demote' end
@@ -335,7 +335,7 @@ function ESJ.registerBusiness(cb)
         return true
     end)
 
-    cb('es_jobs:biz:fire', 800, function(source, d)
+    cb('whip_jobs:biz:fire', 800, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.bizRights(source, b).fire then return false, 'Your rank cannot let people go' end
@@ -348,7 +348,7 @@ function ESJ.registerBusiness(cb)
         return true
     end)
 
-    cb('es_jobs:biz:delete', 3000, function(source, d)
+    cb('whip_jobs:biz:delete', 3000, function(source, d)
         local b = bizOf(d.id)
         if not b then return false, 'No such business' end
         if not ESJ.isAdmin(source) then return false, 'Only an admin can close a business' end

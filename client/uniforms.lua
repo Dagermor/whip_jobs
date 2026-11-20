@@ -1,4 +1,4 @@
--- es_jobs: the locker room on this game. A live preview (the uniform on the player's own ped, a camera in front, turn
+-- whip_jobs: the locker room on this game. A live preview (the uniform on the player's own ped, a camera in front, turn
 -- and zoom with the pad or the buttons), WHIP's character editor for leaders who make uniforms and for officers who
 -- adjust theirs, and putting parts on when the server says so (wear, own clothes, a load after a crash).
 ESJ = ESJ or {}
@@ -38,7 +38,7 @@ function ESJ.applyParts(ped, parts)
     end
 end
 
-RegisterNetEvent('es_jobs:client:dress', function(parts)
+RegisterNetEvent('whip_jobs:client:dress', function(parts)
     before = nil   -- what the server put on is what they wear now: no preview to undo
     ESJ.applyParts(PlayerPedId(), parts)
 end)
@@ -111,7 +111,7 @@ end
 function ESJ.openLocker(st, s)
     spot = { station = st, spot = s }
     CreateThread(function()
-        local ok, r = ESJ.call('es_jobs:uni:list', spot)
+        local ok, r = ESJ.call('whip_jobs:uni:list', spot)
         if not ok then WC:Notify(r, 'error') spot = nil return end
         r.where = spot
         ESJ.openUI('locker', withPictures(r))
@@ -159,7 +159,7 @@ RegisterNUICallback('esj_personal', function(_, cb)
     ESJ.closeUI()
     CreateThread(function()
         Wait(150)
-        local ok, why = ESJ.call('es_jobs:locker:open', where)
+        local ok, why = ESJ.call('whip_jobs:locker:open', where)
         if not ok then WC:Notify(why, 'error') end
     end)
 end)
@@ -172,7 +172,7 @@ local function editor(o)
     CreateThread(function()
         Wait(250)
         if o.prepare then
-            local okp, why = ESJ.call('es_jobs:uni:tryOn', { station = where.station, spot = where.spot, id = o.id })
+            local okp, why = ESJ.call('whip_jobs:uni:tryOn', { station = where.station, spot = where.spot, id = o.id })
             if not okp then WC:Notify(why, 'error') spot = where reopen() return end
             Wait(400)
         end
@@ -204,7 +204,7 @@ RegisterNUICallback('esj_design', function(d, cb)
     if not spot then return end
     local wasWearing = tonumber(d.wearing)
     editor({
-        prepare = d.id ~= nil, id = tonumber(d.id), save = 'es_jobs:uni:save',
+        prepare = d.id ~= nil, id = tonumber(d.id), save = 'whip_jobs:uni:save',
         title = (d.id and 'Uniform: ' or 'New uniform: ') .. tostring(d.name or ''):sub(1, 40), sub = tostring(d.org or ''):sub(1, 60),
         data = { jobId = tonumber(d.jobId), id = tonumber(d.id), name = d.name, minLevel = tonumber(d.minLevel), skip = d.skip },
         after = function(_, where)
@@ -212,10 +212,10 @@ RegisterNUICallback('esj_design', function(d, cb)
             local w = { station = where.station, spot = where.spot }
             if wasWearing then
                 w.id = wasWearing
-                local ok = ESJ.call('es_jobs:uni:wear', w)
+                local ok = ESJ.call('whip_jobs:uni:wear', w)
                 if ok then return end
             end
-            ESJ.call('es_jobs:uni:own', w)
+            ESJ.call('whip_jobs:uni:own', w)
         end,
     })
 end)
@@ -223,7 +223,7 @@ end)
 RegisterNUICallback('esj_adjust', function(_, cb)
     cb({ ok = true })
     if not spot then return end
-    editor({ save = 'es_jobs:uni:adjust', title = 'Adjust your uniform', sub = 'For this shift: your own clothes come back when you clock off' })
+    editor({ save = 'whip_jobs:uni:adjust', title = 'Adjust your uniform', sub = 'For this shift: your own clothes come back when you clock off' })
 end)
 
 AddEventHandler('onResourceStop', function(r)

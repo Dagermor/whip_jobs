@@ -1,4 +1,4 @@
--- es_jobs sims: load the resource's server files in manifest order against an in-memory whip_core, es_mdt and MySQL.
+-- whip_jobs sims: load the resource's server files in manifest order against an in-memory whip_core, es_mdt and MySQL.
 local H = {}
 local ROOT = arg[1]
 H.fails = 0
@@ -67,7 +67,7 @@ function TriggerEvent(n, ...) for _, fn in ipairs(H.handlers[n] or {}) do fn(...
 H.client = {}
 function TriggerClientEvent(n, to, ...) H.client[#H.client + 1] = { n = n, to = to, args = { ... } } end
 function GetInvokingResource() return 'whip_core' end
-function GetCurrentResourceName() return 'es_jobs' end
+function GetCurrentResourceName() return 'whip_jobs' end
 H.states = { es_mdt = 'started', whip_core = 'started' }
 function GetResourceState(n) return H.states[n] or 'missing' end
 H.kvp = {}
@@ -305,7 +305,7 @@ H.ext.es_mdt = {
   CloseCall = function(_, id, outcome) local c = (H.calls or {})[id] if c then c.active = false c.outcome = outcome end return true end,
 }
 
--- ---------------------------------------------------------------- MySQL (the queries es_jobs uses)
+-- ---------------------------------------------------------------- MySQL (the queries whip_jobs uses)
 local T = { biz = {}, st = {}, hist = {}, pay = {}, ledger = {}, lockers = {}, uni = {}, ward = {} }
 H.T = T
 local seq = { biz = 0, st = 0, hist = 0, ledger = 0, uni = 0 }

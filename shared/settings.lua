@@ -1,4 +1,4 @@
--- es_jobs: /whip > Settings > Jobs (Whip.configPage). config.lua stays the defaults; what an admin saves here is written
+-- whip_jobs: /whip > Settings > Jobs (Whip.configPage). config.lua stays the defaults; what an admin saves here is written
 -- over Config on both sides at start and the moment it changes. Stations and businesses themselves are made in game.
 if not (Whip and Whip.configPage) then return end
 
@@ -55,7 +55,7 @@ Whip.configPage({
             { key = 'Business.ped', type = 'string', maxLen = 48, pattern = '^[%w_]+$', patternWhy = 'a ped model name', label = 'Default ped at a business spot' },
         } },
         { id = 'ems', label = 'EMS: wounded and down', settings = {
-            { key = 'EMS.enabled', type = 'bool', label = 'Wounded and down states (es_jobs EMS)', help = 'Off: WHIP\'s plain death screen, and es_mdt\'s own "person down" alert.' },
+            { key = 'EMS.enabled', type = 'bool', label = 'Wounded and down states (whip_jobs EMS)', help = 'Off: WHIP\'s plain death screen, and es_mdt\'s own "person down" alert.' },
             { key = 'EMS.wounded.seconds', type = 'int', min = 30, max = 900, unit = 's', label = 'Wounded for', shownWhen = on('EMS.enabled') },
             { key = 'EMS.wounded.headshotSeconds', type = 'int', min = 10, max = 900, unit = 's', label = 'Wounded for, after a headshot', shownWhen = on('EMS.enabled') },
             { key = 'EMS.wounded.headshotDown', type = 'bool', label = 'A headshot puts you straight down', shownWhen = on('EMS.enabled') },

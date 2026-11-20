@@ -1,4 +1,4 @@
--- es_jobs 0.1.0 client: loads, NUI callbacks, prompts per spot (job-gated), blips by audience, the call whitelist
+-- whip_jobs 0.1.0 client: loads, NUI callbacks, prompts per spot (job-gated), blips by audience, the call whitelist
 local ROOT = arg[1]
 local fails = 0
 local function ok(c, m) if c then print('PASS ' .. m) else fails = fails + 1 print('FAIL ' .. m) end end
@@ -16,7 +16,7 @@ function SetNuiFocus() end
 function CreateThread(f) local co = coroutine.create(f) coroutine.resume(co) end
 function Wait() if coroutine.isyieldable() then coroutine.yield() end end
 function GetResourceState() return 'started' end
-function GetCurrentResourceName() return 'es_jobs' end
+function GetCurrentResourceName() return 'whip_jobs' end
 function GetGameTimer() return 0 end
 json = { encode = function() return '{}' end, decode = function() return {} end }
 function vector3(x, y, z) return { x = x, y = y, z = z } end
@@ -49,7 +49,7 @@ for _, n in ipairs({ 'esj_call', 'esj_close', 'esj_place', 'esj_myPos', 'esj_tel
   ok(NUICB[n] ~= nil, 'NUI callback ' .. n) end
 ok(EXP.OpenStations and EXP.OpenBusiness and EXP.IsOpen, 'client exports')
 -- stations arrive: LSPD (job 11) station with a duty desk, an armory and a garage; a hidden-blip business station
-TriggerEvent('es_jobs:client:stations', {
+TriggerEvent('whip_jobs:client:stations', {
   { id = 1, name = 'Mission Row', jobs = { 11, 12 }, blip = { show = 'everyone', sprite = 60, color = 29 }, spots = {
     { id = 'duty', type = 'duty', label = 'Duty', x = 1, y = 0, z = 0, h = 0, ped = 's_m_y_cop_01' },
     { id = 'arm', type = 'armory', label = 'Armory', x = 2, y = 0, z = 0, h = 0, ped = false },
@@ -88,7 +88,7 @@ TriggerEvent('whip_core:job:listChanged', {})
 nb = 0 for _ in pairs(blips) do nb = nb + 1 end
 ok(nb == 3, 'hired at Bean Machine: its members-only blip appears')
 -- 0.4.0: the DOJ's spots
-TriggerEvent('es_jobs:client:stations', {
+TriggerEvent('whip_jobs:client:stations', {
   { id = 7, name = 'Courthouse', jobs = { 30 }, blip = { show = 'everyone' }, spots = {
     { id = 'ck', type = 'court_clerk', label = 'Court clerk', x = 1, y = 0, z = 0, h = 0, ped = 'a_f_y_business_01' },
     { id = 'cr', type = 'courtroom', label = 'Courtroom 1', x = 2, y = 0, z = 0, h = 0, ped = 's_m_m_highsec_01' },
@@ -113,14 +113,14 @@ do
   ok(#EXP.GetStarter('police') == 4 and #EXP.GetStarter('nothing') == 0, 'GetStarter: police set; unknown type empty')
 end
 -- updating the list replaces the prompts
-TriggerEvent('es_jobs:client:stations', {}, {})
+TriggerEvent('whip_jobs:client:stations', {}, {})
 local leftover = nil for k in pairs(actions) do if k ~= 'esj_ems_aid' then leftover = k end end
 ok(leftover == nil, 'stations gone: prompts removed (' .. tostring(leftover) .. ')')
 ok(actions.esj_ems_aid ~= nil, 'First aid prompt (0.3.0) stays: it is not a station prompt')
--- the page may only call es_jobs callbacks on the list
+-- the page may only call whip_jobs callbacks on the list
 local answered
 NUICB.esj_call({ name = 'whip_core:admin:giveMoney', data = {} }, function(r) answered = r end)
 ok(answered and answered.ok == false and answered.why == 'Unknown call', 'page cannot call anything off the list')
-NUICB.esj_call({ name = 'es_jobs:biz:list', data = {} }, function(r) answered = r end)
-ok(calls[#calls] == 'es_jobs:biz:list', 'listed call goes to the server')
-print(fails == 0 and '== es_jobs client: all passed' or ('== es_jobs client: ' .. fails .. ' FAILED'))
+NUICB.esj_call({ name = 'whip_jobs:biz:list', data = {} }, function(r) answered = r end)
+ok(calls[#calls] == 'whip_jobs:biz:list', 'listed call goes to the server')
+print(fails == 0 and '== whip_jobs client: all passed' or ('== whip_jobs client: ' .. fails .. ' FAILED'))

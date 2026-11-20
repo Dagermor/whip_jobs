@@ -1,4 +1,4 @@
--- es_jobs 0.3.0: EMS on this game. Wounded: on the ground, crawl (W / left stick, turn A D / left stick), Call EMS
+-- whip_jobs 0.3.0: EMS on this game. Wounded: on the ground, crawl (W / left stick, turn A D / left stick), Call EMS
 -- (G / D-pad left), a yellow chip with the timer; down: a red chip over WHIP's death screen. Over hurt people nearby,
 -- a small WOUNDED / DOWN tag. "First aid" on a wounded person (with a kit), "EMS" on anyone for EMS on duty.
 ESJ = ESJ or {}
@@ -82,7 +82,7 @@ local function woundedLoop()
                 if not H.called and now - lastCall > 3000 then
                     lastCall = now
                     CreateThread(function()
-                        local ok, r = ESJ.call('es_jobs:ems:call', {})
+                        local ok, r = ESJ.call('whip_jobs:ems:call', {})
                         if ok then H.called = true WC:Notify('EMS has been called', 'success') chip()
                         else WC:Notify(r, 'error') end
                     end)
@@ -96,7 +96,7 @@ local function woundedLoop()
 end
 
 -- ---------------------------------------------------------------- the server says
-RegisterNetEvent('es_jobs:client:hurt', function(d)
+RegisterNetEvent('whip_jobs:client:hurt', function(d)
     d = type(d) == 'table' and d or {}
     local t = GetGameTimer()
     if d.state == 'wounded' then
@@ -133,7 +133,7 @@ RegisterNetEvent('es_jobs:client:hurt', function(d)
     chip()
 end)
 
-RegisterNetEvent('es_jobs:client:bleedOut', function()
+RegisterNetEvent('whip_jobs:client:bleedOut', function()
     if H.state ~= 'wounded' then return end
     WC:Notify('You bled out', 'error')
     SetEntityHealth(PlayerPedId(), 0)
@@ -176,17 +176,17 @@ AddEventHandler('whip_core:player:died', function(e)
         elseif g ~= 0 then cause = 'gunshot wound' end
     end
     if IsPedInAnyVehicle(ped, true) and not cause then cause = 'vehicle crash' end
-    TriggerServerEvent('es_jobs:ems:info', { headshot = headshot, cause = cause, street = streetHere() })
+    TriggerServerEvent('whip_jobs:ems:info', { headshot = headshot, cause = cause, street = streetHere() })
 end)
 
 -- after a resource restart (or a reconnect), pick up where the server is
 CreateThread(function()
     Whip.ready()
     Wait(3000)
-    local ok, r = ESJ.call('es_jobs:ems:me', {})
+    local ok, r = ESJ.call('whip_jobs:ems:me', {})
     if ok and type(r) == 'table' and r.state ~= 'none' then
-        TriggerEvent('es_jobs:client:hurt', { state = r.state, left = r.left, auto = r.auto, health = r.health })
-        TriggerEvent('es_jobs:client:hurt', { state = r.state, called = r.called, units = r.units })
+        TriggerEvent('whip_jobs:client:hurt', { state = r.state, left = r.left, auto = r.auto, health = r.health })
+        TriggerEvent('whip_jobs:client:hurt', { state = r.state, called = r.called, units = r.units })
     end
 end)
 
@@ -261,13 +261,13 @@ local function rebuild()
     if E().enabled == false then return end
     local F = E().firstAid or {}
     local ok = WC:AddAction({ id = 'esj_ems_aid', at = { aimBox = 'ped' }, label = 'First aid', icon = 'heart', reach = 3.0,
-        require = { item = F.item or 'es_jobs_first_aid' },
+        require = { item = F.item or 'whip_jobs_first_aid' },
         canInteract = function(ctx) return hurtOf(ctx) == 'wounded' and not (ctx.player and ctx.player.isDead) end,
-        onSelect = run('es_jobs:ems:aid') })
+        onSelect = run('whip_jobs:ems:aid') })
     if ok then added.esj_ems_aid = true end
     local jobs = emsJobs()
     if #jobs == 0 then return end
-    local bag = (E().medbag or {}).item or 'es_jobs_medbag'
+    local bag = (E().medbag or {}).item or 'whip_jobs_medbag'
     local ok2 = WC:AddAction({ id = 'esj_ems_person', at = { aimBox = 'ped' }, label = 'EMS', icon = 'heart', reach = 3.0,
         require = { job = jobs, onDuty = true },
         canInteract = function(ctx) return ctx.player ~= nil end,
@@ -275,7 +275,7 @@ local function rebuild()
             { id = 'examine', label = 'Examine', onSelect = function(ctx)
                 local sid = ctx.player and ctx.player.serverId
                 if not sid then return end
-                local okc, r = ESJ.call('es_jobs:ems:examine', { target = sid })
+                local okc, r = ESJ.call('whip_jobs:ems:examine', { target = sid })
                 if not okc then WC:Notify(r, 'error') return end
                 local STATE = { down = 'Not breathing (down)', wounded = 'Wounded', ok = 'Conscious' }
                 local lines = { ('%s · %s'):format(r.name or '?', STATE[r.state] or r.state) }
@@ -287,9 +287,9 @@ local function rebuild()
                 WC:Notify(table.concat(lines, ' · '), r.state == 'ok' and 'info' or 'error', 10000)
             end },
             { id = 'treat', label = 'Treat', require = { item = bag },
-                canInteract = function(ctx) return ctx.player and not ctx.player.isDead end, onSelect = run('es_jobs:ems:treat') },
+                canInteract = function(ctx) return ctx.player and not ctx.player.isDead end, onSelect = run('whip_jobs:ems:treat') },
             { id = 'revive', label = 'Revive', require = { item = bag },
-                canInteract = function(ctx) return ctx.player and ctx.player.isDead end, onSelect = run('es_jobs:ems:revive') },
+                canInteract = function(ctx) return ctx.player and ctx.player.isDead end, onSelect = run('whip_jobs:ems:revive') },
         } })
     if ok2 then added.esj_ems_person = true end
 end

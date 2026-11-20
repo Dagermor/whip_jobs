@@ -1,4 +1,4 @@
--- es_jobs: the impound clerk. A station spot anyone may use: the owner sees their impounded cars (es_mdt keeps the
+-- whip_jobs: the impound clerk. A station spot anyone may use: the owner sees their impounded cars (es_mdt keeps the
 -- impound: fees, holds, the lot), pays at the counter, and takes a released car out at the clerk's parking spaces.
 ESJ = ESJ or {}
 local WC = exports.whip_core
@@ -76,11 +76,11 @@ local function take(source, d)
         WC:DespawnVehicle(row.vehicleId, { garage = row.lot })
         return false, whyS or 'It could not be brought out'
     end
-    WC:LogActivity(source, 'es_jobs_impound', { detail = ('took %s (%s) out of the impound at %s'):format(car.label, car.plate or '?', st.name) })
+    WC:LogActivity(source, 'whip_jobs_impound', { detail = ('took %s (%s) out of the impound at %s'):format(car.label, car.plate or '?', st.name) })
     return { plate = car.plate, label = car.label }
 end
 
 function ESJ.registerImpound(cb)
-    cb('es_jobs:imp:pay', 2500, pay)
-    cb('es_jobs:imp:take', 2500, take)
+    cb('whip_jobs:imp:pay', 2500, pay)
+    cb('whip_jobs:imp:take', 2500, take)
 end

@@ -1,10 +1,11 @@
--- es_jobs 0.1.0: the job pack. Stations (shared by departments), their peds and spots, pay by rank,
+-- whip_jobs (es_jobs before 0.5.0; its tables keep the es_jobs_ names): the job pack. Stations (shared by departments), their peds and spots, pay by rank,
 -- the armory, the fleet garage and lockers, and businesses. Stations are made in the admin menu (/w -> Stations) or Departments -> Locations, businesses with /business:
 -- they live in the database, not here. Everything below is a default; /whip > Settings > Jobs changes it live.
 Config = Config or {}
 
 Config.BusinessCommand = 'business'     -- opens Businesses (owners and managers; admins see them all)
-Config.AdminAce = 'es_jobs.admin'       -- may edit every station and business (server.cfg add_ace); WHIP admins always may
+Config.AdminAce = 'whip_jobs.admin'       -- may edit every station and business (server.cfg add_ace); WHIP admins always may
+                                          -- (the old es_jobs.admin ace still works too)
 
 Config.Stations = {
     pedDistance = 45.0,                  -- metres: a station's peds appear within this, and go past it + 10
@@ -82,14 +83,14 @@ Config.Police = {
     jobs = {},                           -- more jobs that are police (job keys or ids), e.g. a business security firm
     reach = 3.0,                         -- metres to the person you test or seat
     breathalyzer = {
-        item = 'es_jobs_breathalyzer',           -- a tool: kept
+        item = 'whip_jobs_breathalyzer',           -- a tool: kept
         seconds = 5,
         stat = 'drunk',                  -- a WHIP stat another script keeps (0-100); none on this server reads 0.000
         perPoint = 0.004,                -- BAC per point of the stat (100 = 0.40)
         limit = 0.08,                    -- over this reads as over the limit
     },
     drugTest = {
-        item = 'es_jobs_drug_test',          -- one used per test
+        item = 'whip_jobs_drug_test',          -- one used per test
         seconds = 6,
         -- WHIP effects (ApplyEffect names) another script puts on, by a word in their name -> what the test shows
         effects = { weed = 'Cannabis', cannabis = 'Cannabis', joint = 'Cannabis', stoned = 'Cannabis',
@@ -98,7 +99,7 @@ Config.Police = {
         stats = {},                      -- WHIP stats too: { stoned = 'Cannabis' } (above 0 is positive)
     },
     spikes = {
-        item = 'es_jobs_spike_strip',
+        item = 'whip_jobs_spike_strip',
         model = 'p_ld_stinger_s',
         perOfficer = 2,                  -- strips one officer may have down at once
         minutes = 10,                    -- a strip left down goes after this (0: until picked up)
@@ -133,8 +134,8 @@ Config.EMS = {
         downCritical = false,                -- the down call in es_mdt's critical tier (above P1)
         holdRespawn = true,                  -- the respawn waits while EMS units are on the call
     },
-    firstAid = { item = 'es_jobs_first_aid', seconds = 7, health = 150 },
-    medbag = { item = 'es_jobs_medbag' },
+    firstAid = { item = 'whip_jobs_first_aid', seconds = 7, health = 150 },
+    medbag = { item = 'whip_jobs_medbag' },
     treat = { seconds = 6, revive = 8 },
     -- what the patient pays the EMS department (from their bank; what they can't pay stays a bill, paid at a hospital desk)
     bills = { treat = 250, revive = 500, respawn = 750, desk = 400 },

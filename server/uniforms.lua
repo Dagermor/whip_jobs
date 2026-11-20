@@ -1,4 +1,4 @@
--- es_jobs: uniforms. Each department or business keeps uniforms per body (male / female), each from a rank up. They are
+-- whip_jobs: uniforms. Each department or business keeps uniforms per body (male / female), each from a rank up. They are
 -- made in WHIP's own character editor (EditAppearance on the clothes and props tabs only, so every add-on clothing pack
 -- the server streams is there, with its pictures), and worn from a station's locker room.
 --
@@ -94,7 +94,7 @@ end
 local function putOn(source, look, parts)
     local ok, kept = WC:SetPlayerAppearance(source, dress(look, parts), { only = ONLY })
     if not ok then return false, kept end
-    TriggerClientEvent('es_jobs:client:dress', source, parts)
+    TriggerClientEvent('whip_jobs:client:dress', source, parts)
     return true
 end
 
@@ -250,7 +250,7 @@ local function saveCb(source, d)
         U[id] = u
     end
     local o = ESJ.orgByJob(jobId)
-    WC:LogActivity(source, 'es_jobs_uniform', { detail = ('%s uniform "%s" (%s, rank %d+)'):format(o and o.short or jobId, name, body, minLevel) })
+    WC:LogActivity(source, 'whip_jobs_uniform', { detail = ('%s uniform "%s" (%s, rank %d+)'):format(o and o.short or jobId, name, body, minLevel) })
     return { id = u.id }
 end
 
@@ -304,14 +304,14 @@ local function tryOnCb(source, d)
 end
 
 function ESJ.registerUniforms(cb)
-    cb('es_jobs:uni:list', 600, list)
-    cb('es_jobs:uni:wear', 1500, wearCb)
-    cb('es_jobs:uni:own', 1500, ownCb)
-    cb('es_jobs:uni:save', 1500, saveCb)
-    cb('es_jobs:uni:delete', 1000, deleteCb)
-    cb('es_jobs:uni:order', 800, orderCb)
-    cb('es_jobs:uni:adjust', 1500, adjustCb)
-    cb('es_jobs:uni:tryOn', 1500, tryOnCb)
+    cb('whip_jobs:uni:list', 600, list)
+    cb('whip_jobs:uni:wear', 1500, wearCb)
+    cb('whip_jobs:uni:own', 1500, ownCb)
+    cb('whip_jobs:uni:save', 1500, saveCb)
+    cb('whip_jobs:uni:delete', 1000, deleteCb)
+    cb('whip_jobs:uni:order', 800, orderCb)
+    cb('whip_jobs:uni:adjust', 1500, adjustCb)
+    cb('whip_jobs:uni:tryOn', 1500, tryOnCb)
 end
 
 -- clocking off (or logging out, which clocks off): their own clothes, if the uniform was that job's

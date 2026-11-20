@@ -1,6 +1,6 @@
--- es_jobs: a controller in every es_jobs screen, the way es_mdt does it. WHIP reads the pad (Whip.padScreen: the browser
+-- whip_jobs: a controller in every whip_jobs screen, the way es_mdt does it. WHIP reads the pad (Whip.padScreen: the browser
 -- cannot see a gamepad inside FiveM); html/pad.js moves the highlight, A picks, B goes back, LB / RB switch tabs, and a
--- text box opens WHIP's on-screen keyboard. Nothing here runs while no es_jobs screen is open.
+-- text box opens WHIP's on-screen keyboard. Nothing here runs while no whip_jobs screen is open.
 ESJPAD = {}
 local screen, owned, padActive = nil, false, false
 local AX = { t = 0, live = false }

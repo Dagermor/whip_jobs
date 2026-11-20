@@ -1,4 +1,4 @@
--- es_jobs: the station editor's game side. Placing a spot or a parking space: WHIP's PlacePoint ghost (a ped, or the
+-- whip_jobs: the station editor's game side. Placing a spot or a parking space: WHIP's PlacePoint ghost (a ped, or the
 -- vehicle itself when WHIP can show one; otherwise stand or park where it goes and use "my position"). Teleport to a
 -- spot, and a check that a parking space is clear and on the ground. Points are stored at the feet / on the ground.
 ESJ = ESJ or {}
@@ -9,7 +9,7 @@ function ESJ.editing(stationId, spotId) return placing == (stationId .. ':' .. s
 function ESJ.openEditor(opts)
     opts = type(opts) == 'table' and opts or {}
     CreateThread(function()
-        local ok, r = ESJ.call('es_jobs:st:list', {})
+        local ok, r = ESJ.call('whip_jobs:st:list', {})
         if not ok then Whip.core:Notify(r, 'error') return end
         r.focusJob = tonumber(opts.jobId)
         r.focusStation = tonumber(opts.stationId)
@@ -77,7 +77,7 @@ RegisterNUICallback('esj_myPos', function(_, cb) cb({ ok = true, point = round(f
 RegisterNUICallback('esj_teleport', function(d, cb)
     d = type(d) == 'table' and d or {}
     CreateThread(function()
-        local ok, why = ESJ.call('es_jobs:st:teleport', { id = d.station, x = d.x, y = d.y, z = (tonumber(d.z) or 0) + 0.5, h = d.h })
+        local ok, why = ESJ.call('whip_jobs:st:teleport', { id = d.station, x = d.x, y = d.y, z = (tonumber(d.z) or 0) + 0.5, h = d.h })
         cb({ ok = ok, why = (not ok) and why or nil })
     end)
 end)

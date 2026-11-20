@@ -1,4 +1,4 @@
-/* es_jobs: the Departments look (es_mdt html/departments/app.css, WHIP's base.css tokens), plus stations, spots, businesses */
+/* whip_jobs: the Departments look (es_mdt html/departments/app.css, WHIP's base.css tokens), plus stations, spots, businesses */
 html, body { width: 100%; height: 100%; overflow: hidden; font-family: var(--ui-font); color: var(--ui-text); }
 .hidden { display: none !important; }
 #app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); }
@@ -211,7 +211,7 @@ tr.click td { transition: background .12s; }
 .h-stats b.bad { color: #ff7a7a; }
 .h-legend-note { margin-left: var(--ui-sp-3); }
 
-/* ======================================================================= es_jobs */
+/* ======================================================================= whip_jobs */
 .btn.icon { padding: var(--ui-sp-3) var(--ui-sp-5); background: none; }
 .btn.sm { padding: var(--ui-sp-2) var(--ui-sp-4); font-size: var(--ui-fs-sm); }
 .side-foot { display: flex; flex-direction: column; gap: var(--ui-sp-4); }

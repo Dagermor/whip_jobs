@@ -1,4 +1,4 @@
--- es_jobs: the station editor's place in WHIP's admin menu. whip_core's /whip panel has no way for another resource to
+-- whip_jobs: the station editor's place in WHIP's admin menu. whip_core's /whip panel has no way for another resource to
 -- add a section of its own (its sections are built into whip_core), so the editor lives in WHIP's admin menu, /w, as a
 -- page: "Stations" (shown to WHIP admins with developer mode on). /whip -> Settings -> Jobs holds the stations'
 -- settings and says where the editor is. Department leaders still open the same editor from Departments -> Locations,
@@ -81,5 +81,5 @@ Whip.register(function()
         onBack = function() level = 'top' end,
         onOpen = function() level = 'top' end,
     })
-    if not ok then print(('^3[es_jobs] the Stations page in /w was refused: %s^7'):format(tostring(why))) end
+    if not ok then print(('^3[whip_jobs] the Stations page in /w was refused: %s^7'):format(tostring(why))) end
 end)

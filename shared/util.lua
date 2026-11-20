@@ -1,4 +1,4 @@
--- es_jobs: what both sides agree on. Spot types (what a station's spots can be), and the checks every value from a
+-- whip_jobs: what both sides agree on. Spot types (what a station's spots can be), and the checks every value from a
 -- page goes through on the server.
 ESJ = ESJ or {}
 

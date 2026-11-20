@@ -1,4 +1,4 @@
-// es_jobs: the locker room. Uniforms of the departments and businesses the player works for here, each from a rank up,
+// whip_jobs: the locker room. Uniforms of the departments and businesses the player works for here, each from a rank up,
 // shown on the player as they are picked (a live preview: the game puts it on their ped behind this panel and a camera
 // faces them). A puts it on for the shift; own clothes come back at clock-off. Leaders make and change uniforms in WHIP's
 // own character editor (every clothing pack the server streams, add-ons too) and set who may wear them.
@@ -83,7 +83,7 @@
     $('#lk-right', el).onclick = () => nui('esj_turn', { by: 45 });
     $('#lk-zoom', el).onclick = () => nui('esj_zoom');
     const own = $('#lk-own', el); if (own) own.onclick = () => busy(own, async () => {
-      const r = await call('es_jobs:uni:own', where());
+      const r = await call('whip_jobs:uni:own', where());
       if (said(r, 'Back in your own clothes')) { shown = null; D.wearing = false; D.wearingAny = false; render(); }
     });
     const adj = $('#lk-adjust', el); if (adj) adj.onclick = () => nui('esj_adjust');
@@ -94,7 +94,7 @@
     if (!u.allowed) { toast(u.body !== D.body ? `That one is for ${u.body} characters` : (D.onlyOnDuty && !org().onDuty ? 'Clock on first' : 'Your rank cannot wear that one yet'), 'err'); return; }
     if (D.wearing === u.id) return;
     c.classList.add('loading');
-    const r = await call('es_jobs:uni:wear', Object.assign({ id: u.id }, where()));
+    const r = await call('whip_jobs:uni:wear', Object.assign({ id: u.id }, where()));
     c.classList.remove('loading');
     if (said(r, `${u.name} on`)) { D.wearing = u.id; D.wearingAny = true; shown = u.id; render(); }
   }
@@ -133,14 +133,14 @@
       if (!v || v === 'no') return;
       if (v === 'del') {
         if (!(await confirm('Delete this uniform?', `${u.name} goes for everyone. Whoever wears it now keeps it until they change or clock off.`, 'Delete', true))) return;
-        const r = await call('es_jobs:uni:delete', Object.assign({ id: u.id }, where()));
+        const r = await call('whip_jobs:uni:delete', Object.assign({ id: u.id }, where()));
         if (said(r, 'Deleted')) { o.uniforms = o.uniforms.filter((x) => x.id !== u.id); render(); }
         return;
       }
       const name = (vals.name || '').trim();
       if (!name) { toast('Give it a name', 'err'); return design(u); }
       if (v === 'save') {
-        const r = await call('es_jobs:uni:save', Object.assign({ jobId: o.jobId, id: u.id, name, minLevel: vals.min, skip: vals.skip }, where()));
+        const r = await call('whip_jobs:uni:save', Object.assign({ jobId: o.jobId, id: u.id, name, minLevel: vals.min, skip: vals.skip }, where()));
         if (said(r, 'Saved')) { u.name = name; u.minLevel = vals.min; vals.skip.forEach((k) => { const t = k[0] === 'c' ? u.parts.c : u.parts.p; if (t) delete t[k.slice(1)]; }); render(); }
         return;
       }

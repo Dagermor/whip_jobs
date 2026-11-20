@@ -1,4 +1,4 @@
--- es_jobs: pay. People on duty at a department or business are paid by rank every Config.Pay.intervalMinutes on duty,
+-- whip_jobs: pay. People on duty at a department or business are paid by rank every Config.Pay.intervalMinutes on duty,
 -- out of that job's own bank account (BankSystemTransfer to their default account). An account that can't pay: the
 -- paycheck is missed (not owed), they are told, and so are the leaders (once per 10 minutes per job). Every payment,
 -- miss and income (fines, impound fees from es_mdt) goes in the ledger the Finances tab shows.
@@ -69,7 +69,7 @@ local function cantPay(o, jobId, src, charId, amount, why)
         src2 = tonumber(src2)
         if src2 and ESJ.isAdmin(src2) and not WC:GetPlayerRole(src2, jobId) then WC:NotifyPlayer(src2, '[Staff] ' .. msg, 'warning', 8000) end
     end
-    print(('^3[es_jobs] %s (job %d) cannot pay: %s^7'):format(o.name, jobId, tostring(why)))
+    print(('^3[whip_jobs] %s (job %d) cannot pay: %s^7'):format(o.name, jobId, tostring(why)))
 end
 
 local function payOne(o, src, charId, info)
@@ -124,7 +124,7 @@ function ESJ.payProgress(charId, jobId)
 end
 
 function ESJ.registerPay(cb)
-    cb('es_jobs:pay:set', 400, function(source, d)
+    cb('whip_jobs:pay:set', 400, function(source, d)
         local jobId, roleId = tonumber(d.jobId), tonumber(d.roleId)
         local o = jobId and ESJ.orgByJob(jobId)
         if not o then return false, 'No such department or business' end
@@ -143,7 +143,7 @@ function ESJ.registerPay(cb)
         if amount > max then return false, ('The most a paycheck can be is $%d (/whip > Settings > Jobs)'):format(max) end
         MySQL.update.await('INSERT INTO `es_jobs_pay` (`roleId`,`jobId`,`amount`) VALUES (?,?,?) ON DUPLICATE KEY UPDATE `amount` = VALUES(`amount`)', { roleId, jobId, amount })
         PAY[roleId] = amount
-        WC:LogActivity(source, 'es_jobs_pay', { detail = ('%s %s: $%d'):format(o.short or o.name, role.name, amount) })
+        WC:LogActivity(source, 'whip_jobs_pay', { detail = ('%s %s: $%d'):format(o.short or o.name, role.name, amount) })
         return { amount = amount }
     end)
 end

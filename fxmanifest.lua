@@ -1,14 +1,14 @@
--- es_jobs: the job pack for WHIP. Stations shared by departments and businesses (peds, duty, armory, fleet garage,
+-- whip_jobs (named es_jobs before 0.5.0): the job pack for WHIP. A community resource, not an official WHIPFX one. Stations shared by departments and businesses (peds, duty, armory, fleet garage,
 -- lockers), pay by rank from each job's own bank account, and player-owned businesses made like /departments.
 -- Works with es_mdt (departments, ranks, dispatch, fines and impound money) and es_jail (cuffs); neither is required.
 fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-name 'es_jobs'
+name 'whip_jobs'
 description 'Job pack for WHIP: stations, peds, duty, armory, fleet, uniforms, police tools, impound clerk, EMS (wounded/down, hospital, medical records), pay by rank, businesses'
 author 'Rob'
-version '0.4.0'
+version '0.5.0'
 whip_requires '1.0'
 
 dependencies { 'oxmysql', 'whip_core' }   -- optional: es_mdt (departments), es_jail (cuffs), whip_phone
@@ -37,7 +37,7 @@ server_scripts {
 }
 
 client_scripts {
-    'client/pad.lua',           -- controller support for every es_jobs screen
+    'client/pad.lua',           -- controller support for every whip_jobs screen
     'client/main.lua',          -- the screen (NUI) and its callbacks
     'client/stations.lua',      -- peds, prompts and blips near the player
     'client/editor.lua',        -- placing: ghost peds and cars, use my position, teleport, ped pictures

@@ -1,10 +1,14 @@
-# es_jobs: the job pack for WHIP
+# whip_jobs: the job pack for WHIP
+
+> **Community resource.** whip_jobs is made by the community for [WHIP](https://whipfx.net) servers. It is **not an official WHIPFX resource** and is not made, endorsed or supported by the WHIPFX team. Questions and bugs go to this repository's issues, not to WHIPFX.
+>
+> **Renamed:** this was **es_jobs** up to 0.4.0. Old links to `Dagermor/es_jobs` redirect here. Upgrading: see [Upgrading from es_jobs](#upgrading-from-es_jobs).
 
 Everything a job does in the world on a [WHIP](https://whipfx.net) FiveM server: stations with peds, duty and pay by rank, the armory, fleet vehicles, lockers and uniforms, police tools, EMS down states and the hospital, the impound clerk, the courthouse desks, and player-owned businesses.
 
-It works with **[es_mdt](https://github.com/Dagermor/es_mdt)** (departments, ranks, dispatch, tickets, impound, the DOJ) and **es_jail** (cuffs). es_mdt keeps the paperwork and computer side; es_jobs does what happens in the world.
+It works with **[es_mdt](https://github.com/Dagermor/es_mdt)** (departments, ranks, dispatch, tickets, impound, the DOJ) and **es_jail** (cuffs). es_mdt keeps the paperwork and computer side; whip_jobs does what happens in the world.
 
-> **Status: public test release (0.4.0).**
+> **Status: public test release (0.5.0).**
 
 ## Features
 
@@ -29,33 +33,48 @@ It works with **[es_mdt](https://github.com/Dagermor/es_mdt)** (departments, ran
 |---|---|---|
 | whip_core (WHIP 1.0+) | **required** | players, jobs, money, items, the ghost placer, the UI kit |
 | oxmysql | **required** | database (tables are made on first start) |
-| [es_mdt](https://github.com/Dagermor/es_mdt) 2.4.0+ | recommended | departments and ranks, dispatch, impound and the court. Without it only businesses exist |
+| [es_mdt](https://github.com/Dagermor/es_mdt) 2.4.2+ (2.4.0+ while the folder is still named es_jobs) | recommended | departments and ranks, dispatch, impound and the court. Without it only businesses exist |
 | es_jail | optional | cuffs for the police actions |
 | whip_phone | optional | texts |
 
 ## Install
 
-1. Put the `es_jobs` folder in your resources (for example `resources/[es]/es_jobs`).
+1. Put the `whip_jobs` folder in your resources (for example `resources/[es]/whip_jobs`).
 2. In `server.cfg`, start it **after** its dependencies:
    ```
    ensure oxmysql
    ensure whip_core
    ensure es_jail
    ensure es_mdt
-   ensure es_jobs
+   ensure whip_jobs
    ```
-3. Optional: give a group full access to every station and business: `add_ace group.admin es_jobs.admin allow` (WHIP admins always have it).
+3. Optional: give a group full access to every station and business: `add_ace group.admin whip_jobs.admin allow` (WHIP admins always have it).
 4. Restart. Then set up stations in `/w` → Stations, or from `/departments` → Locations. With es_mdt, the old courthouse clerk desk is moved into a "Courthouse" station once.
 
 ## Controller support
 
-Every es_jobs screen works with a controller: the D-pad or left stick moves a focus ring, **A** selects, **B** goes back, bumpers switch tabs, and text fields open WHIP's on-screen keyboard. The ghost placer, the locker preview, the wounded Call EMS button (G or D-pad left) and the prompts work the same way.
+Every whip_jobs screen works with a controller: the D-pad or left stick moves a focus ring, **A** selects, **B** goes back, bumpers switch tabs, and text fields open WHIP's on-screen keyboard. The ghost placer, the locker preview, the wounded Call EMS button (G or D-pad left) and the prompts work the same way.
 
 ## Configuration
 
 - **Live settings:** `/whip` → Settings → Jobs (stations, default peds, pay, gear, police, EMS timers and prices, businesses). They are saved by WHIP and override `config.lua`.
 - **`config.lua`:** the defaults: `Config.Stations` (ped distance, reach, blips, default peds, the ped picture list), `Config.Pay`, `Config.Gear`, `Config.Business` (`playerCreate`, price, ranks), `Config.Police`, `Config.ImpoundClerk`, `Config.EMS`.
 - **Commands:** `/business` (`Config.BusinessCommand`). Stations are in WHIP's admin menu, not a command.
+
+## Upgrading from es_jobs
+
+whip_jobs 0.5.0 is es_jobs with a new name. Your stations, uniforms, pay, businesses, medical records and lockers stay: the database tables keep their `es_jobs_` names.
+
+1. Stop the server. Back up the database and the old `es_jobs` folder.
+2. Settings saved in `/whip` → Settings → Jobs are stored under the resource name. Move them over once (whip_core's own table; nothing else changes):
+   ```sql
+   UPDATE whip_settings SET owner = 'whip_jobs' WHERE owner = 'es_jobs';
+   UPDATE whip_settings_log SET owner = 'whip_jobs' WHERE owner = 'es_jobs';
+   ```
+3. Delete the `es_jobs` folder, put `whip_jobs` in its place, and change `ensure es_jobs` to `ensure whip_jobs` in `server.cfg`. Update es_mdt to 2.4.2 (it finds the job pack under either name). whip_jobs refuses to start while an `es_jobs` is still running.
+4. The `es_jobs.admin` ace still works; `whip_jobs.admin` is the new one.
+5. The items are now `whip_jobs_breathalyzer`, `whip_jobs_drug_test`, `whip_jobs_spike_strip`, `whip_jobs_first_aid` and `whip_jobs_medbag`. If players already hold the old `es_jobs_*` items, set the item names in `config.lua` (`Config.Police`, `Config.EMS`) back to the old ones, or give out the new ones.
+6. Other scripts that call `exports.es_jobs:...` change to `exports.whip_jobs:...`; callbacks and events are now `whip_jobs:*`.
 
 ## Exports
 

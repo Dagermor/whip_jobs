@@ -1,4 +1,4 @@
-// es_jobs: a station spot on screen. Duty desk (clock on / off per department or business, the next paycheck),
+// whip_jobs: a station spot on screen. Duty desk (clock on / off per department or business, the next paycheck),
 // armory (equipment by rank, take and hand back), fleet garage (vehicles by rank, one each), impound clerk (pay, collect).
 (function () {
   'use strict';
@@ -89,7 +89,7 @@
 
   const where = () => ({ station: D.stationId, spot: D.spot });
   async function reload() {
-    const r = await call('es_jobs:spot:open', where());
+    const r = await call('whip_jobs:spot:open', where());
     if (r.ok) { D = r.data; render(); } else said(r);
   }
 
@@ -97,27 +97,27 @@
     J.fillLogos(el, (D.jobs || []).map((j) => ({ kind: j.kind, id: j.orgId, logoVer: j.logoVer, short: j.short })));
     el.querySelectorAll('[data-duty]').forEach((b) => b.onclick = () => busy(b, async () => {
       const on = b.dataset.on === '1';
-      const r = await call('es_jobs:duty', Object.assign(where(), { jobId: +b.dataset.duty, on }));
+      const r = await call('whip_jobs:duty', Object.assign(where(), { jobId: +b.dataset.duty, on }));
       if (said(r)) reload();
     }));
     el.querySelectorAll('[data-take]').forEach((b) => b.onclick = () => busy(b, async () => {
-      const r = await call('es_jobs:armory:take', Object.assign(where(), { item: b.dataset.take, n: 1 }));
+      const r = await call('whip_jobs:armory:take', Object.assign(where(), { item: b.dataset.take, n: 1 }));
       if (said(r)) { D.items.find((x) => x.item === b.dataset.take).have = r.data.have; render(); }
     }));
     el.querySelectorAll('[data-ret]').forEach((b) => b.onclick = () => busy(b, async () => {
-      const r = await call('es_jobs:armory:return', Object.assign(where(), { item: b.dataset.ret, n: 1 }));
+      const r = await call('whip_jobs:armory:return', Object.assign(where(), { item: b.dataset.ret, n: 1 }));
       if (said(r)) { D.items.find((x) => x.item === b.dataset.ret).have = r.data.have; render(); }
     }));
     el.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => busy(b, async () => {
-      const r = await call('es_jobs:imp:pay', Object.assign(where(), { id: +b.dataset.pay, method: b.dataset.m }));
+      const r = await call('whip_jobs:imp:pay', Object.assign(where(), { id: +b.dataset.pay, method: b.dataset.m }));
       if (said(r, 'Paid: it is released')) reload();
     }));
     el.querySelectorAll('[data-takeout]').forEach((b) => b.onclick = () => busy(b, async () => {
-      const r = await call('es_jobs:imp:take', Object.assign(where(), { id: +b.dataset.takeout }));
+      const r = await call('whip_jobs:imp:take', Object.assign(where(), { id: +b.dataset.takeout }));
       if (said(r, `${r.data && r.data.label} is out front`)) J.close();
     }));
     el.querySelectorAll('[data-veh]').forEach((b) => b.onclick = () => busy(b, async () => {
-      const r = await call('es_jobs:fleet:take', Object.assign(where(), { model: b.dataset.veh }));
+      const r = await call('whip_jobs:fleet:take', Object.assign(where(), { model: b.dataset.veh }));
       if (said(r, `${r.data && r.data.label} is out front (${r.data && r.data.plate})`)) J.close();
     }));
   }

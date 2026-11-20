@@ -1,4 +1,4 @@
--- es_jobs: stations. A station is a named place shared by one or more departments and businesses (its `jobs`, by
+-- whip_jobs: stations. A station is a named place shared by one or more departments and businesses (its `jobs`, by
 -- WHIP jobId), with spots: duty, armory, locker, garage, helipad, boat dock (and later impound, hospital, court).
 -- Each spot has a point, an optional ped and, by type, stock (armory), vehicles and spawn points (garages).
 -- Every change keeps the previous version in es_jobs_station_history: undo, restore, and a deleted station comes back.
@@ -158,12 +158,12 @@ end
 
 local pushQueued = false
 function ESJ.pushStations(target)
-    if target then return TriggerClientEvent('es_jobs:client:stations', target, ESJ.publicStations(), ESJ.orgColors()) end
+    if target then return TriggerClientEvent('whip_jobs:client:stations', target, ESJ.publicStations(), ESJ.orgColors()) end
     if pushQueued then return end
     pushQueued = true
     SetTimeout(250, function()
         pushQueued = false
-        TriggerClientEvent('es_jobs:client:stations', -1, ESJ.publicStations(), ESJ.orgColors())
+        TriggerClientEvent('whip_jobs:client:stations', -1, ESJ.publicStations(), ESJ.orgColors())
     end)
 end
 
@@ -240,7 +240,7 @@ end
 --- es_mdt (before 2.4.0) had the court clerk window at fixed coords. The first time both run, those desks become a
 --- "Courthouse" station of the DOJ departments (a clerk window spot each, the old blip), unless a DOJ spot is already
 --- placed. Done once (a resource KVP); the station is then edited like any other.
-local MIGRATED = 'es_jobs:doj_courthouse_migrated'
+local MIGRATED = 'whip_jobs:doj_courthouse_migrated'
 function ESJ.migrateCourthouse()
     if GetResourceKvpString(MIGRATED) == '1' then return end
     if GetResourceState('es_mdt') ~= 'started' then return end
@@ -269,13 +269,13 @@ function ESJ.migrateCourthouse()
         spots = spots }
     local newId = MySQL.insert.await('INSERT INTO `es_jobs_stations` (`name`,`jobs`,`blip`,`spots`,`updatedBy`) VALUES (?,?,?,?,NULL)',
         { st.name, json.encode(st.jobs), json.encode(st.blip), json.encode(st.spots) })
-    if not newId then print('^3[es_jobs] could not make the Courthouse station (database error); trying again next start^7') return end
+    if not newId then print('^3[whip_jobs] could not make the Courthouse station (database error); trying again next start^7') return end
     st.id, st.rev = newId, 1
     ESJ.Stations[st.id] = st
     SetResourceKvp(MIGRATED, '1')
-    print(('^2[es_jobs] the courthouse clerk window%s moved into station #%d "%s" (DOJ). Edit it in /w -> Stations.^7'):format(#spots > 1 and 's' or '', st.id, st.name))
+    print(('^2[whip_jobs] the courthouse clerk window%s moved into station #%d "%s" (DOJ). Edit it in /w -> Stations.^7'):format(#spots > 1 and 's' or '', st.id, st.name))
     ESJ.pushStations()
-    TriggerEvent('es_jobs:server:dojSpots')
+    TriggerEvent('whip_jobs:server:dojSpots')
 end
 
 --- 0.4.0: does any station have a DOJ spot of this type (es_mdt asks, so it drops its own fallback desk)
@@ -289,7 +289,7 @@ exports('HasSpotType', function(key) return ESJ.hasSpotType(key) end)
 
 -- ---------------------------------------------------------------- callbacks
 function ESJ.registerStations(cb)
-    cb('es_jobs:st:list', 300, function(source)
+    cb('whip_jobs:st:list', 300, function(source)
         local mine, admin = ESJ.manageable(source)
         if not admin and next(mine) == nil then return false, 'Only admins and department or business leaders can set up stations' end
         local list = {}
@@ -319,7 +319,7 @@ function ESJ.registerStations(cb)
             blipDefault = { sprite = (Config.Stations or {}).blipSprite or 60, color = (Config.Stations or {}).blipColor or 29 } }
     end)
 
-    cb('es_jobs:st:save', 700, function(source, d)
+    cb('whip_jobs:st:save', 700, function(source, d)
         local id = tonumber(d.id)
         local old = id and ESJ.Stations[id]
         if id and not old then return false, 'That station was deleted' end
@@ -338,24 +338,24 @@ function ESJ.registerStations(cb)
             st = insert(clean, cid)
             if not st then return false, 'Could not save (database error)' end
         end
-        WC:LogActivity(source, 'es_jobs_station', { detail = ('%s: %s (%d spots)'):format(old and 'edit' or 'new', st.name, #st.spots) })
+        WC:LogActivity(source, 'whip_jobs_station', { detail = ('%s: %s (%d spots)'):format(old and 'edit' or 'new', st.name, #st.spots) })
         ESJ.pushStations()
         return { id = st.id, rev = st.rev, spots = st.spots }
     end)
 
-    cb('es_jobs:st:delete', 1500, function(source, d)
+    cb('whip_jobs:st:delete', 1500, function(source, d)
         local st = ESJ.Stations[tonumber(d.id) or 0]
         if not st then return false, 'No such station' end
         if not ESJ.canEdit(source, st) then return false, 'That station is not yours to delete' end
         snapshot(st, 'deleted', WC:GetCharId(source))
         MySQL.update.await('DELETE FROM `es_jobs_stations` WHERE `id` = ?', { st.id })
         ESJ.Stations[st.id] = nil
-        WC:LogActivity(source, 'es_jobs_station', { detail = 'deleted: ' .. st.name })
+        WC:LogActivity(source, 'whip_jobs_station', { detail = 'deleted: ' .. st.name })
         ESJ.pushStations()
         return true
     end)
 
-    cb('es_jobs:st:history', 400, function(source, d)
+    cb('whip_jobs:st:history', 400, function(source, d)
         local id = tonumber(d.id) or 0
         local st = ESJ.Stations[id]
         if st and not ESJ.canEdit(source, st) then return false, 'Not yours' end
@@ -374,7 +374,7 @@ function ESJ.registerStations(cb)
     end)
 
     --- put a station back as it was in a history row (also brings a deleted station back, under its old number)
-    cb('es_jobs:st:restore', 1500, function(source, d)
+    cb('whip_jobs:st:restore', 1500, function(source, d)
         local h = MySQL.single.await('SELECT `stationId`,`snapshot`,`action` FROM `es_jobs_station_history` WHERE `id` = ?', { tonumber(d.historyId) or 0 })
         if not h then return false, 'That version is gone' end
         local st = ESJ.Stations[h.stationId]
@@ -403,7 +403,7 @@ function ESJ.registerStations(cb)
     end)
 
     --- undo: the newest history row of this station
-    cb('es_jobs:st:undo', 800, function(source, d)
+    cb('whip_jobs:st:undo', 800, function(source, d)
         local st = ESJ.Stations[tonumber(d.id) or 0]
         if not st then return false, 'No such station' end
         if not ESJ.canEdit(source, st) then return false, 'Not yours' end
@@ -427,19 +427,19 @@ function ESJ.registerStations(cb)
     end)
 
     --- a backup of every station (admins): the page offers it as a file to keep
-    cb('es_jobs:st:export', 3000, function(source)
+    cb('whip_jobs:st:export', 3000, function(source)
         if not ESJ.isAdmin(source) then return false, 'Admins only' end
         local out = {}
         for _, st in pairs(ESJ.Stations) do out[#out + 1] = { id = st.id, name = st.name, jobs = st.jobs, blip = st.blip, spots = st.spots } end
         table.sort(out, function(a, b) return a.id < b.id end)
-        return { es_jobs = '0.1', at = os.time(), stations = out }
+        return { whip_jobs = '0.1', at = os.time(), stations = out }
     end)
 
     --- bring a backup back (admins). Stations with the same number are replaced (their current version kept in history).
-    cb('es_jobs:st:import', 5000, function(source, d)
+    cb('whip_jobs:st:import', 5000, function(source, d)
         if not ESJ.isAdmin(source) then return false, 'Admins only' end
         local data = type(d.text) == 'string' and #d.text < 2000000 and decode(d.text, nil)
-        if type(data) ~= 'table' or type(data.stations) ~= 'table' then return false, 'That is not an es_jobs station backup' end
+        if type(data) ~= 'table' or type(data.stations) ~= 'table' then return false, 'That is not an whip_jobs station backup' end
         local cid, n, skipped = WC:GetCharId(source), 0, {}
         for _, s in ipairs(data.stations) do
             local clean, why = cleanStation(source, s, nil)
@@ -465,12 +465,12 @@ function ESJ.registerStations(cb)
             else skipped[#skipped + 1] = tostring(s.name or '?') end
         end
         ESJ.pushStations()
-        WC:LogActivity(source, 'es_jobs_station', { detail = ('import: %d stations'):format(n) })
+        WC:LogActivity(source, 'whip_jobs_station', { detail = ('import: %d stations'):format(n) })
         return { count = n, skipped = skipped }
     end)
 
     --- the editor's "go there"
-    cb('es_jobs:st:teleport', 800, function(source, d)
+    cb('whip_jobs:st:teleport', 800, function(source, d)
         local st = ESJ.Stations[tonumber(d.id) or 0]
         local mine, admin = ESJ.manageable(source)
         if not admin and not (st and ESJ.canEdit(source, st)) and next(mine) == nil then return false, 'Not allowed' end

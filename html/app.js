@@ -1,8 +1,8 @@
-// es_jobs page core. Views: spot (duty / armory / garage), stations (the editor), business. The game (client/main.lua)
-// sends { action: 'open', view, data }; the page asks the server with J.call(name, data) (an es_jobs SecureCallback).
+// whip_jobs page core. Views: spot (duty / armory / garage), stations (the editor), business. The game (client/main.lua)
+// sends { action: 'open', view, data }; the page asks the server with J.call(name, data) (an whip_jobs SecureCallback).
 (function () {
   'use strict';
-  const RES = (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'es_jobs';
+  const RES = (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'whip_jobs';
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -64,11 +64,11 @@
       const r = await nui('esj_deptLogo', { id: o.id, ver: o.logoVer });
       data = r && r.ok ? r.url : null;
     } else {
-      const first = await call('es_jobs:biz:logo', { id: o.id, i: 1 });
+      const first = await call('whip_jobs:biz:logo', { id: o.id, i: 1 });
       if (first.ok && first.data.total > 0) {
         const parts = [first.data.part];
         for (let i = 2; i <= first.data.total; i++) {
-          const p = await call('es_jobs:biz:logo', { id: o.id, i });
+          const p = await call('whip_jobs:biz:logo', { id: o.id, i });
           if (!p.ok) return null;
           parts.push(p.data.part);
         }

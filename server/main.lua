@@ -1,8 +1,8 @@
--- es_jobs: start-up, the callback wrapper, commands, exports.
+-- whip_jobs: start-up, the callback wrapper, commands, exports.
 ESJ = ESJ or {}
 local WC = exports.whip_core
 
---- every page call: SecureCallback 'es_jobs:...' with one table argument, rate limited, checked by hand in each handler
+--- every page call: SecureCallback 'whip_jobs:...' with one table argument, rate limited, checked by hand in each handler
 local function cb(name, rate, fn, burst)
     Whip.core:SecureCallback(name, { rateLimit = rate or 300, burst = burst or 6, sheet = 'light', params = { { 'd', 'any' } } },
         function(source, _, d)
@@ -13,9 +13,13 @@ end
 
 local loaded = false
 Whip.register(function()
+    -- 0.5.0: es_jobs is this resource's old name; both at once would register everything twice
+    if GetResourceState('es_jobs') == 'started' then
+        Whip.startProblem('es_jobs (the old name of whip_jobs) is also running: remove it and its `ensure es_jobs` line') return
+    end
     local ok, why = ESJ.ensureTables()
     if not ok then Whip.startProblem('tables: %s', tostring(why)) return end
-    if not (ESJ.loadBusinesses() and ESJ.loadStations() and ESJ.loadPay() and ESJ.loadUniforms()) then Whip.startProblem('could not read the es_jobs tables') return end
+    if not (ESJ.loadBusinesses() and ESJ.loadStations() and ESJ.loadPay() and ESJ.loadUniforms()) then Whip.startProblem('could not read the whip_jobs tables') return end
     ESJ.registerBusiness(cb)
     ESJ.registerStations(cb)
     ESJ.registerGear(cb)
@@ -24,10 +28,10 @@ Whip.register(function()
     ESJ.registerPolice(cb)
     ESJ.registerImpound(cb)
     ESJ.registerEms(cb)
-    cb('es_jobs:st:public', 1500, function(source)
+    cb('whip_jobs:st:public', 1500, function(source)
         return { stations = ESJ.publicStations(), orgs = ESJ.orgColors() }
     end)
-    cb('es_jobs:me', 800, function(source)
+    cb('whip_jobs:me', 800, function(source)
         local mine, admin = ESJ.manageable(source)
         return { admin = admin, leads = next(mine) ~= nil }
     end)
@@ -43,7 +47,7 @@ CreateThread(function()
         Wait(60000)
         if loaded then
             local ok, err = pcall(ESJ.payTick)
-            if not ok then print(('^3[es_jobs] pay: %s^7'):format(tostring(err))) end
+            if not ok then print(('^3[whip_jobs] pay: %s^7'):format(tostring(err))) end
         end
     end
 end)
@@ -80,7 +84,7 @@ CreateThread(function()
     -- 0.2.0: no /stations for players. Admins open the editor from the WHIP admin menu (/w -> Stations, or /whip ->
     -- Settings -> Jobs says where); department leaders from Departments -> Locations; business owners from /business.
     Whip.command(Config.BusinessCommand or 'business', { console = false }, function(source)
-        TriggerClientEvent('es_jobs:client:open', source, { view = 'business' })
+        TriggerClientEvent('whip_jobs:client:open', source, { view = 'business' })
     end)
 end)
 

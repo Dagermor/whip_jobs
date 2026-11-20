@@ -1,4 +1,4 @@
--- es_jobs: stations near the player. Peds are made on this game only (not networked), only while the player is within
+-- whip_jobs: stations near the player. Peds are made on this game only (not networked), only while the player is within
 -- Config.Stations.pedDistance, frozen, invincible and deaf to the world. Each spot is a WHIP prompt shown only to the
 -- members of the station's departments and businesses (WHIP checks the job; the server checks again on use).
 -- Blips: per station, for everyone, its members, or nobody.
@@ -101,7 +101,7 @@ local function removeActions()
 end
 
 local function openSpot(st, s)
-    local ok, r = ESJ.call('es_jobs:spot:open', { station = st.id, spot = s.id })
+    local ok, r = ESJ.call('whip_jobs:spot:open', { station = st.id, spot = s.id })
     if not ok then WC:Notify(r, 'error') return end
     if s.type == 'locker' then return ESJ.openLocker(st.id, s.id) end
     ESJ.openUI('spot', r)
@@ -155,7 +155,7 @@ local function addActions()
                     local z = s.z + (s.ped and 1.15 or 0.9)
                     local label = (s.label ~= '' and s.label) or VERB[s.type]
                     local def = {
-                        id = id, group = 'es_jobs', at = { coords = vector3(s.x, s.y, z) },
+                        id = id, group = 'whip_jobs', at = { coords = vector3(s.x, s.y, z) },
                         label = label, icon = ICON[s.type] or 'info', description = T.public and st.name or orgNames(st),
                         require = T.public and { vehicle = 'out' } or { job = st.jobs, vehicle = 'out' },
                         reach = T.spawns and (R + 1.0) or R, seeFrom = S().seeFrom or 8.0, focusMode = 'near',
@@ -169,11 +169,11 @@ local function addActions()
                     if T.fleet then
                         local rid = id .. '_ret'
                         local ok2 = WC:AddAction({
-                            id = rid, group = 'es_jobs', at = { coords = vector3(s.x, s.y, s.z) }, label = 'Put the vehicle back', icon = ICON[s.type],
+                            id = rid, group = 'whip_jobs', at = { coords = vector3(s.x, s.y, s.z) }, label = 'Put the vehicle back', icon = ICON[s.type],
                             require = { job = st.jobs, vehicle = 'in' }, reach = 12.0, seeFrom = 25.0, focusMode = 'near',
                             canInteract = function() return ESJ.myFleet ~= nil end,
                             onSelect = function(ctx)
-                                local okr, why = ESJ.call('es_jobs:fleet:return', { station = st.id, spot = s.id })
+                                local okr, why = ESJ.call('whip_jobs:fleet:return', { station = st.id, spot = s.id })
                                 if okr then ESJ.myFleet = nil WC:Notify('Vehicle put back', 'success')
                                 elseif ctx.refuse then ctx.refuse(why) else WC:Notify(why, 'error') end
                             end,
@@ -235,10 +235,10 @@ local function apply(list, orgs)
     if ESJ.onOrgs then ESJ.onOrgs() end
 end
 
-RegisterNetEvent('es_jobs:client:stations', function(list, orgs) apply(list, orgs) end)
+RegisterNetEvent('whip_jobs:client:stations', function(list, orgs) apply(list, orgs) end)
 AddEventHandler('whip_core:job:listChanged', function() drawBlips() end)
 
-RegisterNetEvent('es_jobs:client:fleetOut', function(o)
+RegisterNetEvent('whip_jobs:client:fleetOut', function(o)
     if type(o) ~= 'table' then return end
     ESJ.myFleet = o
     WC:Notify(('Your vehicle (%s) is out front'):format(o.plate or ''), 'success')
@@ -261,7 +261,7 @@ end)
 CreateThread(function()
     Whip.ready()
     Wait(2500)
-    local ok, r = ESJ.call('es_jobs:st:public', {})
+    local ok, r = ESJ.call('whip_jobs:st:public', {})
     if ok and type(r) == 'table' then apply(r.stations, r.orgs) end
 end)
 

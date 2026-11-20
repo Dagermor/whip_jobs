@@ -1,4 +1,4 @@
--- es_jobs: our tables (whip_core EnsureTable: made once, migrations recorded).
+-- whip_jobs: our tables (whip_core EnsureTable: made once, migrations recorded).
 ESJ = ESJ or {}
 
 local TABLES = {
